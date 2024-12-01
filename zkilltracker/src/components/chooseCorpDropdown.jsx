@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios';
 
-export default function ChooseCorpDropdown( { setActiveCorporation }) {
+export default function ChooseCorpDropdown( { activeCorporation, setActiveCorporationId }) {
   const [allCorporations, setAllCorporations] = useState([]);
   const [open, setOpen] = useState(false);
+  const [dropdownText, setDropdownText] = useState("Select a corporation")
 
   useEffect(() => {
     axios.get("/corporations")
@@ -16,13 +17,22 @@ export default function ChooseCorpDropdown( { setActiveCorporation }) {
   }, []);
 
   function handleDropdownChoice(corpID) {
-    setActiveCorporation(corpID)
+    setActiveCorporationId(corpID);
+    setOpen(!open);
   }
+
+  useEffect(() => {
+    if (!activeCorporation) {
+      return
+    } else {
+      setDropdownText(activeCorporation.name);
+    }
+  }, [activeCorporation])
 
   return (
     <div className="dropdownContainer">
       <div className="dropdownButton" onClick={() => setOpen(!open)}>
-        Select a corporation
+        {dropdownText}
       </div>
       <div className="dropdownContent" style={{display: open ? 'flex' : 'none'}}>
         {allCorporations.map((corp, index) => (
