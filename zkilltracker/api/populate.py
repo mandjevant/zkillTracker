@@ -3,13 +3,14 @@ import requests
 import json
 
 # Fetch the JSON data from the API
-url = "https://zkillboard.com/api/stats/corporationID/98753041/"
+MCAPcorporationID = 98753041
+url = "https://zkillboard.com/api/stats/corporationID/98701358/"
 response = requests.get(url)
 data = response.json()
 
 # Extract the required data for the 'months' table
 months_data = data.get('months', {})
-corporation_id = 98753041
+corporation_id = 98701358
 
 months_entries = []
 for month, stats in months_data.items():
