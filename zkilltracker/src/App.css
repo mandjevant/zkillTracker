@@ -14,16 +14,18 @@
 }
 
 .corporationChooser {
-  margin-top: 2vh;
+  margin-top: 7.5vh;
   display: flex;
   justify-content: center;
 }
 
 .viewMonths {
   display: flex;
-  margin-top: 10vh;
-  width: 70vw;
+  margin-top: 8vh;
+  width: 80vw;
   height: 60vh;
+  flex-direction: row;
+  justify-content: space-between;
 }
 
 .dropdownContainer {
@@ -144,4 +146,11 @@
 Tooltip {
   font-size: 18px;
   background-color: #1e1e1e;
+}
+
+.corporationGraphSelectors {
+  display: flex;
+  flex-direction: column;
+  margin-left: 2vw;
+  width: 8vw;
 }

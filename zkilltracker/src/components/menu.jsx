@@ -8,15 +8,15 @@ export default function Menu(props) {
   const initMenus = [
     {
       menuId: 1,
-      menuName: "Corporation",
-      menuRef: "#corporation",
+      menuName: "Corporations",
+      menuRef: "#corporations",
       view: "/corporationView",
     },
     {
       menuId: 2,
-      menuName: "Compare corps",
-      menuRef: "#comparecorps",
-      view: "/compareCorpsView",
+      menuName: "Members",
+      menuRef: "#members",
+      view: "/membersView",
     },
     {
       menuId: 3,
@@ -41,13 +41,11 @@ export default function Menu(props) {
         <div className="sideMenu">
           <ul id="menu">
             {initMenus.map((menu, index) => (
-            //   <a href={menu.menuRef} onClick={() => setActiveView(menu.view)} key={index}>
                 <li key={index}>
                     <NavLink to={menu.menuRef} className='navs'>
                         <label>{menu.menuName}</label>
                     </NavLink>
                 </li>
-            //   </a>
             ))}
           </ul>
         </div>

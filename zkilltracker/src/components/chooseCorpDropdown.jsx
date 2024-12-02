@@ -5,8 +5,11 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 export default function ChooseCorpDropdown( { activeCorporation, setActiveCorporationId }) {
   const [allCorporations, setAllCorporations] = useState([]);
   const [open, setOpen] = useState(false);
+  const [displayOptionsOpen, setDisplayOptionsOpen] = useState(false);
   const [dropdownText, setDropdownText] = useState("Select a corporation")
   const [monthsData, setMonthsData] = useState("")
+  const corpDisplayOptions = ["Ships", "Points", "Isk"]
+  const [displayOptionsDropdownText, setDisplayOptionsDropdownText] = useState("Ships")
 
   useEffect(() => {
     axios.get("/corporations")
@@ -21,6 +24,11 @@ export default function ChooseCorpDropdown( { activeCorporation, setActiveCorpor
   function handleDropdownChoice(corpID) {
     setActiveCorporationId(corpID);
     setOpen(!open);
+  }
+
+  function handleDisplayDropdownChoice(name) {
+    setDisplayOptionsDropdownText(name);
+    setDisplayOptionsOpen(!displayOptionsOpen);
   }
 
   useEffect(() => {
@@ -40,7 +48,7 @@ export default function ChooseCorpDropdown( { activeCorporation, setActiveCorpor
         console.error("Error fetching corporations: ", error);
       })
   }, [activeCorporation])
-
+ 
   return (
     <div>
       <div className="corporationChooser">
@@ -62,20 +70,38 @@ export default function ChooseCorpDropdown( { activeCorporation, setActiveCorpor
         <ResponsiveContainer width={"100%"} height={"100%"}>
           <LineChart data={monthsData}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis tickLine={true} xAxisId={0} dy={0} dx={-0} label={{ value: '', angle: 0, position: 'bottom' }} interval={0} dataKey="month" tick={{fontSize: 18, angle: 0 }} />
-            <XAxis xAxisId={1} label={{ value: '', angle: 0, position: 'bottom' }} interval={10} dataKey="year" tick={{fontSize: 18, angle: 0}} />
+            <XAxis dataKey="month" />
+            <XAxis xAxisId={1} interval={10} dataKey="year" tick={{fontSize: 18, angle: 0}} />
             <YAxis />
             <Tooltip contentStyle={{backgroundColor: "#1e1e1e", borderRadius: "8px"}} />
-            <Legend />
+            <Legend wrapperStyle={{bottom: -2}} />
             <Line
               type="monotone"
-              dataKey="shipsDestroyed"
+              dataKey={`${displayOptionsDropdownText.toLowerCase()}Destroyed`}
               stroke="#82ca9d"
               activeDot={{ r: 8 }}
             />
-            <Line type="monotone" dataKey="shipsLost" stroke="#b64949" />
+            <Line 
+              type="monotone" 
+              dataKey={`${displayOptionsDropdownText.toLowerCase()}Lost`} 
+              stroke="#b64949" 
+            />
           </LineChart>
         </ResponsiveContainer>
+        <div className="corporationGraphSelectors">
+            <div className="dropdownContainer">
+              <div className="dropdownButton" onClick={() => setDisplayOptionsOpen(!displayOptionsOpen)}>
+                {displayOptionsDropdownText}
+              </div>
+              <div className="dropdownContent" style={{display: displayOptionsOpen ? 'flex' : 'none'}}>
+                {corpDisplayOptions.map((displayOption, index) => (
+                  <div className="dropdownItem" key={index} onClick={() => handleDisplayDropdownChoice(displayOption)}>
+                    {displayOption}
+                  </div>
+                ))}
+              </div>
+            </div>
+        </div>
       </div>
     </div>
   )
