@@ -154,3 +154,9 @@ Tooltip {
   margin-left: 2vw;
   width: 8vw;
 }
+
+.corporationGraphSelectors p {
+  margin-left: 4.5vw;
+  font-size: 22px;
+  margin-bottom: -.25vh;
+}
