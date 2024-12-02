@@ -52,7 +52,7 @@ export default function ChooseCorpDropdown( { activeCorporation, setActiveCorpor
   return (
     <div>
       <div className="corporationChooser">
-        <p>Corporation</p>
+        <p>Corporation:</p>
         <div className="dropdownContainer">
           <div className="dropdownButton" onClick={() => setOpen(!open)}>
             {dropdownText}
@@ -89,6 +89,7 @@ export default function ChooseCorpDropdown( { activeCorporation, setActiveCorpor
           </LineChart>
         </ResponsiveContainer>
         <div className="corporationGraphSelectors">
+            <p>Display:</p>
             <div className="dropdownContainer">
               <div className="dropdownButton" onClick={() => setDisplayOptionsOpen(!displayOptionsOpen)}>
                 {displayOptionsDropdownText}
