@@ -54,56 +54,83 @@ corporation_entry = (
 conn = sqlite3.connect('instance/zkillboard_stats.db')
 cursor = conn.cursor()
 
+# cursor.execute('''
+# CREATE TABLE IF NOT EXISTS months (
+#     corporationID INTEGER,
+#     year INTEGER,
+#     month INTEGER,
+#     shipsLost INTEGER,
+#     pointsLost INTEGER,
+#     iskLost INTEGER,
+#     shipsDestroyed INTEGER,
+#     pointsDestroyed INTEGER,
+#     iskDestroyed INTEGER,
+#     PRIMARY KEY (corporationID, year, month)
+# )
+# ''')
+
+# cursor.execute('''
+# CREATE TABLE IF NOT EXISTS corporation (
+#     id INTEGER PRIMARY KEY,
+#     allianceID INTEGER,
+#     ceoID INTEGER,
+#     dateFounded TEXT,
+#     memberCount INTEGER,
+#     name TEXT,
+#     taxRate REAL,
+#     ticker TEXT,
+#     soloKills INTEGER,
+#     soloLosses INTEGER,
+#     avgGangSize REAL,
+#     iskLost INTEGER,
+#     attackersLost INTEGER,
+#     shipsDestroyed INTEGER,
+#     iskDestroyed INTEGER,
+#     attackersDestroyed INTEGER
+# )
+# ''')
+
+import pandas as pd
+df = pd.read_excel("alliancedatadump.xlsx", header=0)
+
+
 cursor.execute('''
-CREATE TABLE IF NOT EXISTS months (
-    corporationID INTEGER,
-    year INTEGER,
-    month INTEGER,
-    shipsLost INTEGER,
-    pointsLost INTEGER,
-    iskLost INTEGER,
-    shipsDestroyed INTEGER,
-    pointsDestroyed INTEGER,
-    iskDestroyed INTEGER,
-    PRIMARY KEY (corporationID, year, month)
+CREATE TABLE IF NOT EXISTS alliance (
+    CorporationTicker VARCHAR(10),
+    Kills FLOAT,
+    Mains INT,
+    ActiveMains INT,
+    KillsPerActiveMain FLOAT,
+    PercentageOfAllianceKills VARCHAR(10),
+    Year INT,
+    Month INT
 )
 ''')
 
-cursor.execute('''
-CREATE TABLE IF NOT EXISTS corporation (
-    id INTEGER PRIMARY KEY,
-    allianceID INTEGER,
-    ceoID INTEGER,
-    dateFounded TEXT,
-    memberCount INTEGER,
-    name TEXT,
-    taxRate REAL,
-    ticker TEXT,
-    soloKills INTEGER,
-    soloLosses INTEGER,
-    avgGangSize REAL,
-    iskLost INTEGER,
-    attackersLost INTEGER,
-    shipsDestroyed INTEGER,
-    iskDestroyed INTEGER,
-    attackersDestroyed INTEGER
-)
-''')
+df.to_sql('alliance', conn, if_exists='append', index=False)
 
-# Insert the data into the tables
-cursor.executemany('''
-INSERT OR REPLACE INTO months (
-    corporationID, year, month, shipsLost, pointsLost, iskLost,
-    shipsDestroyed, pointsDestroyed, iskDestroyed
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-''', months_entries)
+# cursor.executemany('''
+# INSERT OR REPLACE INTO alliance (
+#     CorporationTicker, Kills, Mains, ActiveMains, KillsPerActiveMain, 
+#     PercentageOfAllianceKills, Year, Month
+# ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+# ''', alliance_entries)
 
-cursor.execute('''
-INSERT OR REPLACE INTO corporation (
-    id, allianceID, ceoID, dateFounded, memberCount, name, taxRate, ticker,
-    soloKills, soloLosses, avgGangSize, iskLost, attackersLost, shipsDestroyed, iskDestroyed, attackersDestroyed
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-''', corporation_entry)
+
+# # Insert the data into the tables
+# cursor.executemany('''
+# INSERT OR REPLACE INTO months (
+#     corporationID, year, month, shipsLost, pointsLost, iskLost,
+#     shipsDestroyed, pointsDestroyed, iskDestroyed
+# ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+# ''', months_entries)
+
+# cursor.execute('''
+# INSERT OR REPLACE INTO corporation (
+#     id, allianceID, ceoID, dateFounded, memberCount, name, taxRate, ticker,
+#     soloKills, soloLosses, avgGangSize, iskLost, attackersLost, shipsDestroyed, iskDestroyed, attackersDestroyed
+# ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+# ''', corporation_entry)
 
 # Commit the changes and close the connection
 conn.commit()
