@@ -62,3 +62,26 @@ class Months(db.Model):
         self.shipsDestroyed = shipsDestroyed
         self.pointsDestroyed = pointsDestroyed
         self.iskDestroyed = iskDestroyed
+
+
+class Alliance(db.Model):
+    __tablename__ = "alliance"
+
+    corporationTicker = db.Column(db.String, primary_key=True)
+    kills = db.Column(db.Integer, nullable=False)
+    mains = db.Column(db.Integer, nullable=False)
+    activeMains = db.Column(db.Integer, nullable=False)
+    killsPerActiveMain = db.Column(db.Float, nullable=False)
+    percentageOfAllianceKills = db.Column(db.String, nullable=False)
+    year = db.Column(db.Integer, primary_key=True)
+    month = db.Column(db.Integer, primary_key=True)
+
+    def __init__(self, corporationTicker, kills, mains, activeMains, killsPerActiveMain, percentageOfAllianceKills, year, month):
+        self.corporationTicker = corporationTicker
+        self.kills = kills
+        self.mains = mains
+        self.activeMains = activeMains
+        self.killsPerActiveMain = killsPerActiveMain
+        self.percentageOfAllianceKills = percentageOfAllianceKills
+        self.year = year
+        self.month = month

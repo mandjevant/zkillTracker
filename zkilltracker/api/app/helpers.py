@@ -30,3 +30,15 @@ def serialize_month(month):
         "pointsDestroyed": month.pointsDestroyed,
         "iskDestroyed": month.iskDestroyed
     }
+
+def serialize_alliance(entry):
+    return {
+        "corporationTicker": entry.corporationTicker,
+        "kills": entry.kills,
+        "mains": entry.mains,
+        "activeMains": entry.activeMains,
+        "killsPerActiveMain": entry.killsPerActiveMain,
+        "percentageOfAllianceKills": entry.percentageOfAllianceKills,
+        "year": entry.year,
+        "month": entry.month
+    }
