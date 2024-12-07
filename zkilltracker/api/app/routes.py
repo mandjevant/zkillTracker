@@ -30,32 +30,22 @@ def get_all_corporations():
 
 @app.route("/get_alliance_data", methods=["GET"])
 def get_alliance_data():
-    corporations = request.args.getlist("corporations")
-    display_option = request.args.get("display_option")
     start_year = int(request.args.get("start_year"))
     start_month = int(request.args.get("start_month"))
     end_year = int(request.args.get("end_year"))
     end_month = int(request.args.get("end_month"))
-    show_alliance_total = request.args.get("show_alliance_total", "false").lower() == "true"
-
-    valid_display_options = ["kills", "mains", "activeMains", "killsPerActiveMain", "percentageOfAllianceKills"]
-    if display_option not in valid_display_options:
-        return jsonify({"error": "Invalid display option"}), 400
+    corporations = request.args.getlist("corporations")
 
     query = db.session.query(Alliance).filter(
-        (Alliance.year > start_year) | ((Alliance.year == start_year) & (Alliance.month >= start_month)),
-        (Alliance.year < end_year) | ((Alliance.year == end_year) & (Alliance.month <= end_month))
+        (Alliance.year > start_year) | 
+        ((Alliance.year == start_year) & (Alliance.month >= start_month)),
+        (Alliance.year < end_year) | 
+        ((Alliance.year == end_year) & (Alliance.month <= end_month))
     )
 
-    if corporations:
-        query = query.filter(Alliance.corporationTicker.in_(corporations))
+    result = query.filter(Alliance.corporationTicker.in_(corporations)).all()
     
-    if show_alliance_total:
-        query = query.filter((Alliance.corporationTicker.in_(corporations)) | (Alliance.corporationTicker == "SIGMA"))
-
-    results = query.all()
-
-    return jsonify([serialize_alliance(entry) for entry in results])
+    return jsonify([serialize_alliance(entry) for entry in result])
 
 
 @app.route("/get_alliance_tickers", methods=["GET"])
