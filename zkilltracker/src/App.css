@@ -19,7 +19,7 @@
   justify-content: center;
 }
 
-.viewMonths {
+.viewGraph {
   display: flex;
   margin-top: 8vh;
   width: 80vw;
@@ -143,11 +143,6 @@
   margin-left: 0.25vw;
 }
 
-Tooltip {
-  font-size: 18px;
-  background-color: #1e1e1e;
-}
-
 .corporationGraphSelectors {
   display: flex;
   flex-direction: column;
@@ -161,6 +156,19 @@ Tooltip {
   margin-bottom: -.25vh;
 }
 
+.allianceGraphSelectors {
+  display: flex;
+  flex-direction: column;
+  margin-left: 2vw;
+  width: 15vw;
+}
+
+.allianceGraphSelectors p {
+  margin-left: 4.5vw;
+  font-size: 22px;
+  margin-bottom: -.25vh;
+}
+
 .mantine-MultiSelect-input {
   max-width: 15-vw;
 }
@@ -169,3 +177,23 @@ Tooltip {
   font-size: 14px;
   font-weight: bold;
 }
+
+#allianceGraph {
+  margin-top: 20vh;
+}
+
+#allianceLineChart {
+  width: 65vw;
+}
+
+.customAllianceLegend {
+  display: flex !important;
+  flex-direction: row;
+  justify-content: flex-end;
+}
+
+.legendItem {
+  margin-left: 1vw !important;
+}
+
+

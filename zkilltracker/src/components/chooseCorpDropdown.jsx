@@ -75,7 +75,7 @@ export default function ChooseCorpDisplay( { activeCorporation, setActiveCorpora
           </div>
         </div>
       </div>
-      <div className="viewMonths">
+      <div className="viewGraph">
         <LineChart
           data={monthsData}
           dataKey={"monthYearConcat"}
@@ -88,9 +88,7 @@ export default function ChooseCorpDisplay( { activeCorporation, setActiveCorpora
           tooltipAnimationDuration={100}
           xAxisLabel={"Month-Year"}
           yAxisLabel={"Amount"}
-          xAxisProps={{  }}
         />
-
         <div className="corporationGraphSelectors">
             <p>Display:</p>
             <div className="dropdownContainer">
