@@ -160,3 +160,12 @@ Tooltip {
   font-size: 22px;
   margin-bottom: -.25vh;
 }
+
+.mantine-MultiSelect-input {
+  max-width: 15-vw;
+}
+
+.mantine-LineChart-axisLabel {
+  font-size: 14px;
+  font-weight: bold;
+}
