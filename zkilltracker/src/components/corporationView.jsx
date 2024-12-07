@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import ChooseCorpDropdown from './chooseCorpDropdown';
+import ChooseCorpDisplay from './chooseCorpDropdown';
 import Menu from './menu';
 
 export default function CorporationView() {
@@ -15,7 +15,7 @@ export default function CorporationView() {
   return (
     <div className="App">
         <Menu />
-        <ChooseCorpDropdown activeCorporation={activeCorporation} setActiveCorporationId={setActiveCorporationId} />
+        <ChooseCorpDisplay activeCorporation={activeCorporation} setActiveCorporationId={setActiveCorporationId} />
     </div>
   );
 }

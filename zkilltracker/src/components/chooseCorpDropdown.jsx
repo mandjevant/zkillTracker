@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { LineChart } from "@mantine/charts";
 
-export default function ChooseCorpDropdown( { activeCorporation, setActiveCorporationId }) {
+export default function ChooseCorpDisplay( { activeCorporation, setActiveCorporationId }) {
   const [allCorporations, setAllCorporations] = useState([]);
   const [open, setOpen] = useState(false);
   const [displayOptionsOpen, setDisplayOptionsOpen] = useState(false);
@@ -40,12 +40,21 @@ export default function ChooseCorpDropdown( { activeCorporation, setActiveCorpor
   }, [activeCorporation])
 
   useEffect(() => {
+    if (!activeCorporation) {
+      return
+    }
     axios.get("/corporation/"+String(activeCorporation.id)+"/months")
       .then(res => {
-        setMonthsData(res.data);
+        const corporationsWithMonthYearConcat = res.data.map(corp => {
+          return {
+            ...corp,
+            monthYearConcat: `${corp.month}-${corp.year}`
+          };
+        });
+        setMonthsData(corporationsWithMonthYearConcat);
       })
       .catch(error => {
-        console.error("Error fetching corporations: ", error);
+        console.error("Error fetching corporation: ", error);
       })
   }, [activeCorporation])
  
@@ -67,27 +76,21 @@ export default function ChooseCorpDropdown( { activeCorporation, setActiveCorpor
         </div>
       </div>
       <div className="viewMonths">
-        <ResponsiveContainer width={"100%"} height={"100%"}>
-          <LineChart data={monthsData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="month" />
-            <XAxis xAxisId={1} interval={10} dataKey="year" tick={{fontSize: 18, angle: 0}} />
-            <YAxis />
-            <Tooltip contentStyle={{backgroundColor: "#1e1e1e", borderRadius: "8px"}} />
-            <Legend wrapperStyle={{bottom: -2}} />
-            <Line
-              type="monotone"
-              dataKey={`${displayOptionsDropdownText.toLowerCase()}Destroyed`}
-              stroke="#82ca9d"
-              activeDot={{ r: 8 }}
-            />
-            <Line 
-              type="monotone" 
-              dataKey={`${displayOptionsDropdownText.toLowerCase()}Lost`} 
-              stroke="#b64949" 
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        <LineChart
+          data={monthsData}
+          dataKey={"monthYearConcat"}
+          series={[
+            { name: `${displayOptionsDropdownText.toLowerCase()}Destroyed`, color: '#82ca9d'},
+            { name: `${displayOptionsDropdownText.toLowerCase()}Lost`, color: '#b64949'},
+          ]}
+          curveType="natural"
+          withLegend
+          tooltipAnimationDuration={100}
+          xAxisLabel={"Month-Year"}
+          yAxisLabel={"Amount"}
+          xAxisProps={{  }}
+        />
+
         <div className="corporationGraphSelectors">
             <p>Display:</p>
             <div className="dropdownContainer">
