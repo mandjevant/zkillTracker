@@ -9,20 +9,17 @@ export default function Menu(props) {
     {
       menuId: 1,
       menuName: "Corporations",
-      menuRef: "#corporations",
-      view: "/corporationView",
+      menuRef: "/",
     },
     {
       menuId: 2,
       menuName: "Members",
-      menuRef: "#members",
-      view: "/membersView",
+      menuRef: "/members",
     },
     {
       menuId: 3,
       menuName: "Alliance",
-      menuRef: "#alliance",
-      view: "allianceView",
+      menuRef: "/alliance",
     },
   ];
 
