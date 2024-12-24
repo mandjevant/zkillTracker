@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { NavLink } from 'react-router-dom'
+import { Drawer, Button } from "@mantine/core";
 
 
-export default function Menu(props) {
+export default function Menu() {
   const [isActive, setIsActive] = useState(false);
 
   const initMenus = [
@@ -21,6 +22,11 @@ export default function Menu(props) {
       menuName: "Alliance",
       menuRef: "/alliance",
     },
+    {
+      menuId: 4,
+      menuName: "Admin",
+      menuRef: "/admin",
+    },
   ];
 
   function switchActive() {
@@ -35,17 +41,33 @@ export default function Menu(props) {
         <span></span>
       </div>
       {isActive && (
-        <div className="sideMenu">
+        <Drawer 
+          size="xs" 
+          opened={isActive} 
+          onClose={switchActive} 
+        >
           <ul id="menu">
             {initMenus.map((menu, index) => (
-                <li key={index}>
-                    <NavLink to={menu.menuRef} className='navs'>
-                        <label>{menu.menuName}</label>
-                    </NavLink>
-                </li>
+              <li className="lili" key={index}>
+                <NavLink 
+                  to={menu.menuRef} 
+                  className="navs" 
+                  onClick={() => document.title = menu.menuName}
+                >
+                  <Button 
+                    className="menuItem" 
+                    variant="subtle" 
+                    color="gray"
+                  >
+                    <label style={{ textDecoration: null }}>
+                      {menu.menuName}
+                    </label>
+                  </Button>
+                </NavLink>
+              </li>
             ))}
           </ul>
-        </div>
+        </Drawer>
       )}
     </div>
   );
