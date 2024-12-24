@@ -25,4 +25,5 @@ yarn-error.log*
 /api/app/__pycache__
 /api/__pycache__
 /api/venv
-/api/.flaskenv
+zkilltracker/api/.flaskenv
+zkilltracker/.vscode
