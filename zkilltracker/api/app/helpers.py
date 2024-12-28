@@ -1,3 +1,10 @@
+from app import EVE_CLIENT_ID, EVE_CLIENT_SECRET
+from flask import session
+from jose import jwt
+import requests
+import base64
+
+
 def serialize_corporation(corp):
     return {
         "id": corp.id,
@@ -102,3 +109,69 @@ def serialize_month_progress(item):
         "characterName": item.characterName,
         "kills": item.kills,
     }
+
+
+def _validate_eve_jwt(token: str) -> dict:
+    res = requests.get(
+        "https://login.eveonline.com/.well-known/oauth-authorization-server"
+    )
+    res.raise_for_status()
+    data = res.json()
+
+    try:
+        jwks_uri = data["jwks_uri"]
+    except KeyError:
+        raise RuntimeError(
+            f"Invalid data received from the SSO meta data endpoint: {data}"
+        )
+
+    res = requests.get(jwks_uri)
+    res.raise_for_status()
+    data = res.json()
+
+    try:
+        jwk_sets = data["keys"]
+    except KeyError:
+        raise RuntimeError(f"Invalid data received from the the jwks endpoint: {data}")
+
+    jwk_set = [item for item in jwk_sets if item["alg"] == "RS256"].pop()
+
+    contents = jwt.decode(
+        token=token,
+        key=jwk_set,
+        algorithms=jwk_set["alg"],
+        issuer=("login.eveonline.com", "https://login.eveonline.com"),
+        audience="EVE Online",
+    )
+    return contents
+
+
+def get_payload(authorization_code: str):
+    payload = {"grant_type": "authorization_code", "code": authorization_code}
+
+    credentials = f"{EVE_CLIENT_ID}:{EVE_CLIENT_SECRET}"
+    encoded_credentials = base64.b64encode(credentials.encode()).decode()
+
+    headers = {
+        "Authorization": f"Basic {encoded_credentials}",
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Host": "login.eveonline.com",
+    }
+
+    url = "https://login.eveonline.com/v2/oauth/token"
+    response = requests.post(url, data=payload, headers=headers)
+
+    if response.status_code == 200:
+        access_token = response.json()["access_token"]
+    else:
+        raise RuntimeError("Could not get access_token")
+
+    content = _validate_eve_jwt(access_token)
+    character_id = content["sub"][14:]
+    character_name = content["name"]
+
+    session["character_id"] = character_id
+    session["character_name"] = character_name
+    session["access_token"] = access_token
+
+    return character_id
