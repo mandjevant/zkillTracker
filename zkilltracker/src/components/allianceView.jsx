@@ -166,7 +166,7 @@ export default function AllianceView() {
           series={selectedCorporations.map((corp, index) => (
             { name: corp, color: colors[index], alwaysShowInLegend: true }
           ))}
-          curveType="natural"
+          curveType="bump"
           withLegend
           legendProps={{ content: <ChartLegend />, }}
           tooltipAnimationDuration={100}

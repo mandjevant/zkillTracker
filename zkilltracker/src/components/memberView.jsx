@@ -7,7 +7,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Menu from './menu';
 import { IconCalendarMonth, IconInfinity } from '@tabler/icons-react';
-import { Tabs, Select, Paper, Button, Table } from '@mantine/core';
+import { Tabs, Select, Paper, Table, Button } from '@mantine/core';
 import axios from 'axios';
 import { negaNotifProps } from './helpers';
 import { showNotification } from '@mantine/notifications';
@@ -211,7 +211,7 @@ export default function MemberView() {
                 series={[
                   { name: displayOption, color: "#1F77B4" }
                 ]}
-                curveType="natural"
+                curveType="bump"
                 withLegend
                 // legendProps={{ content: <ChartLegend />, }}
                 tooltipAnimationDuration={100}
