@@ -1,33 +1,47 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { NavLink } from 'react-router-dom'
 import { Drawer, Button } from "@mantine/core";
+import { useAuth } from "../App";
 
+
+const initMenus = [
+  {
+    menuId: 1,
+    menuName: "Corporations",
+    menuRef: "/corporation",
+  },
+  {
+    menuId: 2,
+    menuName: "Members",
+    menuRef: "/members",
+  },
+  {
+    menuId: 3,
+    menuName: "Alliance",
+    menuRef: "/alliance",
+  },
+];
+
+const adminMenus = [
+  {
+    menuId: 4,
+    menuName: "Admin",
+    menuRef: "/admin",
+  },
+];
 
 export default function Menu() {
   const [isActive, setIsActive] = useState(false);
+  const [menus, setMenus] = useState([initMenus]);
+  const { isAdmin } = useAuth()
 
-  const initMenus = [
-    {
-      menuId: 1,
-      menuName: "Corporations",
-      menuRef: "/",
-    },
-    {
-      menuId: 2,
-      menuName: "Members",
-      menuRef: "/members",
-    },
-    {
-      menuId: 3,
-      menuName: "Alliance",
-      menuRef: "/alliance",
-    },
-    {
-      menuId: 4,
-      menuName: "Admin",
-      menuRef: "/admin",
-    },
-  ];
+  useEffect(() => {
+    if (isAdmin) {
+      setMenus(initMenus.concat(adminMenus))
+    } else {
+      setMenus(initMenus)
+    }
+  }, [isAdmin])
 
   function switchActive() {
     setIsActive(!isActive);
@@ -47,7 +61,7 @@ export default function Menu() {
           onClose={switchActive} 
         >
           <ul id="menu">
-            {initMenus.map((menu, index) => (
+            {menus.map((menu, index) => (
               <li className="lili" key={index}>
                 <NavLink 
                   to={menu.menuRef} 
