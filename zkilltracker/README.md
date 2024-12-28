@@ -22,13 +22,24 @@ Backend
 - Add member route
 - Add corporation route
 - Threadsafe sqlite (sqlalchemy?)
-- Kick off repopulate job in diff thread (kills & memberKills)
+- Kick off repopulate job in diff thread (kills & memberKills) (celery?)
 - Execute corporation, add refresh in same thread
 - Fill characterID, characterName, corporationID table
 - Mains-alts matching? iff => Kaka
+- Authentication on admin calls
 
 Frontend
 - Next.js
 - Typescript
 - API calls on server files?
 - Tab switch and login handling via Contextmanager
+
+Mantine goodies
+- Table
+- Card/Paper
+- LoadingOverlay | Alert/notification
+- Modal with form? Or textInput/numberinput -> Contentmodals | updatingContext modal
+- Tooltips?
+- NumberFormatter in Table
+- Appshell
+- Dropzone?
