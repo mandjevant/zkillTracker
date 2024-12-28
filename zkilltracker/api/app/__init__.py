@@ -30,6 +30,8 @@ with app.app_context():
         MemberKills,
         Members,
         Kills,
+        AdminCharacters,
+        ApprovedCharacters,
     )
 
     db.create_all()
