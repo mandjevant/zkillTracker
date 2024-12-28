@@ -291,3 +291,17 @@
 .corpTable {
   margin-top: 1vh;
 }
+
+.AppLogin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logOutButton {
+  z-index: 99999;
+  position: fixed !important;
+  top: 1vh;
+  right: 1vw;
+  width: 5vw;
+}
