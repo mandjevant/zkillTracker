@@ -14,20 +14,6 @@ export default function CorporationView() {
   const [displayOptionsDropdownText, setDisplayOptionsDropdownText] = useState("Ships")
   const [corpMonthKillRows, setCorpMonthKillRows] = useState([])
 
-  // useEffect(() => {
-  //   fetch(`/corporation/${activeCorporationId.toString()}`)
-  //     .then(res => {
-  //       setActiveCorporation(res.data);
-  //     })
-  //     .catch(error => {
-  //       showNotification({
-  //         message: "Error fetching corporation",
-  //         ...negaNotifProps
-  //       })
-  //       console.error("Error fetching corporations: ", error);
-  //     });
-  // }, [activeCorporationId]);
-  
   useEffect(() => {
     axios.get("/corporations")
       .then(res => {
@@ -117,7 +103,7 @@ export default function CorporationView() {
               { name: `${displayOptionsDropdownText.toLowerCase()}Destroyed`, color: '#82ca9d' },
               { name: `${displayOptionsDropdownText.toLowerCase()}Lost`, color: '#b64949' },
             ]}
-            curveType="natural"
+            curveType="bump"
             withLegend
             tooltipAnimationDuration={100}
             xAxisLabel={"Year-Month"}
