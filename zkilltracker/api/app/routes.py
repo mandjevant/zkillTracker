@@ -1,5 +1,11 @@
-from flask import jsonify, request
-from app import app, db
+from flask import jsonify, request, redirect, session
+from app import (
+    app,
+    db,
+    EVE_AUTH_URL,
+    EVE_REDIRECT_URI,
+    EVE_CLIENT_ID,
+)
 from app.models import (
     Months,
     Corporation,
@@ -8,6 +14,8 @@ from app.models import (
     Kills,
     MemberKills,
     Items,
+    AdminCharacters,
+    ApprovedCharacters,
 )
 from app.helpers import (
     serialize_corporation,
@@ -19,18 +27,103 @@ from app.helpers import (
     serialize_member_kills,
     serialize_items,
     serialize_month_progress,
+    get_payload,
 )
 from sqlalchemy import func, extract
 from app.populators import add_corp
 from app.taskmanager import KillRefreshTask, MemberRefreshTask
-import uuid
+from app.decorators import login_required, admin_required
 import threading
+import uuid
 
 
 active_task = None
 
 
+@app.route("/login")
+def login():
+    auth_url = f"{EVE_AUTH_URL}?response_type=code&state={uuid.uuid4()}&redirect_uri={EVE_REDIRECT_URI}&client_id={EVE_CLIENT_ID}"
+    return auth_url
+
+
+@app.route("/oauth-callback/", methods=["GET"])
+def oauth_callback():
+    auth_code = request.args.get("code")
+    if auth_code:
+        get_payload(auth_code)
+    return redirect("http://localhost:3000/"), 200
+
+
+@app.route("/check_approval")
+def check_approval():
+    character_id = session.get("character_id")
+    character_name = session.get("character_name")
+    if not character_id:
+        return jsonify({"status": "in_progress"})
+
+    approved_character = ApprovedCharacters.query.filter_by(
+        characterID=character_id
+    ).first()
+    print(approved_character)
+    if approved_character:
+        session["logged_in"] = True
+        admin_character = AdminCharacters.query.filter_by(
+            characterID=character_id
+        ).first()
+        session["is_admin"] = bool(admin_character)
+        return jsonify(
+            {
+                "status": "Done",
+                "logged_in": True,
+                "is_admin": bool(admin_character),
+                "character_name": character_name,
+            }
+        )
+    else:
+        return (
+            jsonify(
+                {
+                    "status": "False",
+                    "logged_in": False,
+                    "is_admin": False,
+                    "character_name": None,
+                }
+            ),
+            400,
+        )
+
+
+@app.route("/check_logged_in")
+def check_logged_in():
+    logged_in = session.get("logged_in", False)
+    is_admin = session.get("is_admin", False)
+    character_name = session.get("character_name", False)
+    return jsonify(
+        {
+            "logged_in": logged_in,
+            "is_admin": is_admin,
+            "character_name": character_name,
+        }
+    )
+
+
+@app.route("/logout")
+@login_required
+def logout():
+    session["logged_in"] = False
+    session["is_admin"] = False
+    session["character_name"] = None
+    return jsonify(
+        {
+            "logged_in": session["logged_in"],
+            "is_admin": session["is_admin"],
+            "character_name": session["character_name"],
+        }
+    )
+
+
 @app.route("/corporation/<int:corporation_id>/months", methods=["GET"])
+@login_required
 def get_months_corporation(corporation_id: int):
     months = (
         db.session.query(Months)
@@ -45,6 +138,7 @@ def get_months_corporation(corporation_id: int):
 
 
 @app.route("/corporation/<int:corporation_id>", methods=["GET"])
+@login_required
 def get_corporation(corporation_id: int):
     corporation = db.session.query(Corporation).filter_by(id=corporation_id).first()
     if corporation is None:
@@ -54,6 +148,7 @@ def get_corporation(corporation_id: int):
 
 
 @app.route("/corporations", methods=["GET"])
+@login_required
 def get_all_corporations():
     corporations = db.session.query(Corporation).all()
 
@@ -61,6 +156,7 @@ def get_all_corporations():
 
 
 @app.route("/get_alliance_data", methods=["GET"])
+@login_required
 def get_alliance_data():
     start_year = int(request.args.get("start_year"))
     start_month = int(request.args.get("start_month"))
@@ -81,6 +177,7 @@ def get_alliance_data():
 
 
 @app.route("/get_alliance_tickers", methods=["GET"])
+@login_required
 def get_alliance_tickers():
     start_year = int(request.args.get("start_year"))
     start_month = int(request.args.get("start_month"))
@@ -102,6 +199,7 @@ def get_alliance_tickers():
 
 
 @app.route("/corporation/<int:corporation_id>/members", methods=["GET"])
+@login_required
 def get_corporation_members(corporation_id: int):
     members = (
         db.session.query(Members).filter(Members.corporationID == corporation_id).all()
@@ -114,6 +212,7 @@ def get_corporation_members(corporation_id: int):
 
 
 @app.route("/corporation/add/<int:corporation_id>")
+@login_required
 def add_corporation(corporation_id: int):
     existing_corporation = (
         db.session.query(Corporation).filter_by(id=corporation_id).first()
@@ -126,6 +225,7 @@ def add_corporation(corporation_id: int):
 
 
 @app.route("/member/<int:character_id>/monthlyaggregations", methods=["GET"])
+@login_required
 def get_member_monthly_aggregations(character_id: int):
     results = (
         db.session.query(
@@ -147,8 +247,35 @@ def get_member_monthly_aggregations(character_id: int):
     return jsonify([serialize_aggregations(agg) for agg in results])
 
 
+import datetime
+from dateutil.relativedelta import relativedelta
+
+
 @app.route("/member/<int:character_id>/aggregations", methods=["GET"])
+@login_required
 def get_member_aggregations(character_id: int):
+    date_range = (
+        db.session.query(
+            func.min(func.strftime("%Y-%m", Kills.datetime)).label("min_date"),
+            func.max(func.strftime("%Y-%m", Kills.datetime)).label("max_date"),
+        )
+        .join(MemberKills, MemberKills.killID == Kills.killID)
+        .filter(MemberKills.characterID == character_id)
+        .first()
+    )
+
+    if not date_range.min_date or not date_range.max_date:
+        return jsonify([])
+
+    start_date = datetime.datetime.strptime(date_range.min_date, "%Y-%m")
+    end_date = datetime.datetime.strptime(date_range.max_date, "%Y-%m")
+
+    year_months = []
+    current_date = start_date
+    while current_date <= end_date:
+        year_months.append(current_date.strftime("%Y-%m"))
+        current_date += relativedelta(months=1)
+
     results = (
         db.session.query(
             func.strftime("%Y-%m", Kills.datetime).label("year_month"),
@@ -162,13 +289,58 @@ def get_member_aggregations(character_id: int):
         .select_from(MemberKills)
         .join(Kills, MemberKills.killID == Kills.killID)
         .filter(MemberKills.characterID == character_id)
+        .group_by(func.strftime("%Y-%m", Kills.datetime))
         .all()
     )
 
-    return jsonify([serialize_aggregations(agg) for agg in results])
+    results_dict = {
+        result.year_month: serialize_aggregations(result) for result in results
+    }
+
+    aggregated_results = []
+    for ym in year_months:
+        if ym in results_dict:
+            aggregated_results.append(results_dict[ym])
+        else:
+            aggregated_results.append(
+                {
+                    "year_month": ym,
+                    "totalValue": 0,
+                    "points": 0,
+                    "npc": 0,
+                    "solo": 0,
+                    "awox": 0,
+                    "killCount": 0,
+                }
+            )
+
+    return jsonify(aggregated_results)
+
+
+# @app.route("/member/<int:character_id>/aggregations", methods=["GET"])
+# @login_required
+# def get_member_aggregations(character_id: int):
+#     results = (
+#         db.session.query(
+#             func.strftime("%Y-%m", Kills.datetime).label("year_month"),
+#             func.sum(Kills.totalValue).label("totalValue"),
+#             func.sum(Kills.points).label("points"),
+#             func.sum(Kills.npc).label("npc"),
+#             func.sum(Kills.solo).label("solo"),
+#             func.sum(Kills.awox).label("awox"),
+#             func.count().label("killCount"),
+#         )
+#         .select_from(MemberKills)
+#         .join(Kills, MemberKills.killID == Kills.killID)
+#         .filter(MemberKills.characterID == character_id)
+#         .all()
+#     )
+
+#     return jsonify([serialize_aggregations(agg) for agg in results])
 
 
 @app.route("/member/<int:character_id>/kills/all", methods=["GET"])
+@login_required
 def get_all_member_kills(character_id: int):
     kills = (
         db.session.query(MemberKills, Kills)
@@ -192,6 +364,7 @@ def get_all_member_kills(character_id: int):
     "/member/<int:character_id>/kills/year/<int:year_id>/month/<int:month_id>",
     methods=["GET"],
 )
+@login_required
 def get_month_member_kills(character_id: int, year_id: int, month_id: int):
     kills = (
         db.session.query(MemberKills, Kills)
@@ -224,6 +397,7 @@ def get_month_member_kills(character_id: int, year_id: int, month_id: int):
     "/corporation/<int:corporation_id>/kills/year/<int:year_id>/month/<int:month_id>",
     methods=["GET"],
 )
+@login_required
 def get_month_corporation_kills(corporation_id: int, year_id: int, month_id: int):
     kills = (
         db.session.query(Members.characterName, func.count(Kills.killID).label("kills"))
@@ -256,6 +430,7 @@ def get_month_corporation_kills(corporation_id: int, year_id: int, month_id: int
     "/member/<int:character_id>/change_corporation/<int:corporation_id>",
     methods=["PUT"],
 )
+@admin_required
 def change_member_corporation(character_id: int, corporation_id: int):
     corporation = db.session.query(Corporation).filter_by(id=corporation_id).first()
     if corporation is None:
@@ -275,6 +450,7 @@ def change_member_corporation(character_id: int, corporation_id: int):
     "/members/add/<int:character_id>/<string:character_name>/<int:corporation_id>",
     methods=["POST"],
 )
+@admin_required
 def add_member(character_id: int, character_name: str, corporation_id: int):
     corporation = db.session.query(Corporation).filter_by(id=corporation_id).first()
     if corporation is None:
@@ -298,6 +474,7 @@ def add_member(character_id: int, character_name: str, corporation_id: int):
 
 
 @app.route("/kills/add", methods=["GET"])
+@admin_required
 def add_kills():
     global active_task
     if active_task is not None:
@@ -316,6 +493,7 @@ def add_kills():
 
 
 @app.route("/task/status/<string:task_id>", methods=["GET"])
+@admin_required
 def task_status(task_id: str):
     global active_task
     if active_task == None:
@@ -329,6 +507,7 @@ def task_status(task_id: str):
 
 
 @app.route("/members/add", methods=["GET"])
+@admin_required
 def add_members():
     global active_task
     if active_task is not None:
