@@ -234,3 +234,27 @@ class Items(db.Model):
 
     def __repr__(self):
         return f"<Items type_id={self.type_id}, name={self.name}>"
+
+
+class ApprovedCharacters(db.Model):
+    __tablename__ = "approvedCharacters"
+
+    characterID = db.Column(db.Integer, primary_key=True)
+
+    def __init__(self, characterID):
+        self.characterID = characterID
+
+    def __repr__(self):
+        return f"<ApprovedCharacters characterID={self.characterID}>"
+
+
+class AdminCharacters(db.Model):
+    __tablename__ = "adminCharacters"
+
+    characterID = db.Column(db.Integer, primary_key=True)
+
+    def __init__(self, characterID):
+        self.characterID = characterID
+
+    def __repr__(self):
+        return f"<AdminCharacters characterID={self.characterID}>"
