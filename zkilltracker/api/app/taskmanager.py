@@ -2,6 +2,7 @@ import requests
 from app import app, db
 from app.models import Corporation, Kills, MemberKills, Members
 import datetime
+import time
 
 
 class KillRefreshTask:
@@ -31,6 +32,7 @@ class KillRefreshTask:
                 res_prev = self.get_corp_kills(corp_id, current_year, previous_month)
                 failed_combinations.extend(res_curr)
                 failed_combinations.extend(res_prev)
+                time.sleep(5)
 
             self.failed_combinations = failed_combinations
             self.status = "Done"
