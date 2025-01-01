@@ -1,4 +1,5 @@
 from app import db
+from flask_login import UserMixin
 
 
 class Corporation(db.Model):
@@ -236,25 +237,25 @@ class Items(db.Model):
         return f"<Items type_id={self.type_id}, name={self.name}>"
 
 
-class ApprovedCharacters(db.Model):
+class ApprovedCharacters(db.Model, UserMixin):
     __tablename__ = "approvedCharacters"
 
-    characterID = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
 
-    def __init__(self, characterID):
-        self.characterID = characterID
+    def __init__(self, id):
+        self.id = id
 
     def __repr__(self):
-        return f"<ApprovedCharacters characterID={self.characterID}>"
+        return f"<ApprovedCharacters characterID={self.id}>"
 
 
-class AdminCharacters(db.Model):
+class AdminCharacters(db.Model, UserMixin):
     __tablename__ = "adminCharacters"
 
-    characterID = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
 
-    def __init__(self, characterID):
-        self.characterID = characterID
+    def __init__(self, id):
+        self.id = id
 
     def __repr__(self):
-        return f"<AdminCharacters characterID={self.characterID}>"
+        return f"<AdminCharacters characterID={self.id}>"
