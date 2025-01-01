@@ -28,8 +28,11 @@ class KillRefreshTask:
             failed_combinations = list()
 
             for corp_id in corporation_ids:
-                res_curr = self.get_corp_kills(corp_id, current_year, current_month)
-                res_prev = self.get_corp_kills(corp_id, current_year, previous_month)
+                res_curr = self.get_corp_kills(corp_id[0], current_year, current_month)
+                time.sleep(5)
+                res_prev = self.get_corp_kills(
+                    corp_id[0], current_year - 1, previous_month
+                )
                 failed_combinations.extend(res_curr)
                 failed_combinations.extend(res_prev)
                 time.sleep(5)
@@ -123,7 +126,6 @@ class MemberRefreshTask:
 
     def fill_members_corp(self, corporation_id: int):
         try:
-            # Get all members from api
             response = requests.get(f"https://evewho.com/api/corplist/{corporation_id}")
             data = response.json()
 
@@ -136,7 +138,6 @@ class MemberRefreshTask:
             members_to_add = []
             members_to_update = []
 
-            # Get all members in database
             db_members = Members.query.all()
             db_members_dict = {member.characterID: member for member in db_members}
 
