@@ -1,5 +1,6 @@
-from app import EVE_CLIENT_ID, EVE_CLIENT_SECRET
-from flask import session
+from app import EVE_CLIENT_ID, EVE_CLIENT_SECRET, login_manager, db
+from app.models import ApprovedCharacters, AdminCharacters
+from flask import session, jsonify
 from jose import jwt
 import requests
 import base64
@@ -111,6 +112,15 @@ def serialize_month_progress(item):
     }
 
 
+@login_manager.user_loader
+def load_user(id):
+    return ApprovedCharacters.query.filter_by(id=id).first()
+
+
+def is_admin(user):
+    return AdminCharacters.query.filter_by(id=user.id).first() is not None
+
+
 def _validate_eve_jwt(token: str) -> dict:
     res = requests.get(
         "https://login.eveonline.com/.well-known/oauth-authorization-server"
@@ -175,3 +185,28 @@ def get_payload(authorization_code: str):
     session["access_token"] = access_token
 
     return character_id
+
+
+def check_user_status():
+    character_id = session.get("character_id")
+    character_name = session.get("character_name")
+    if not character_id:
+        return jsonify({"status": "in_progress"})
+
+    approved_character = ApprovedCharacters.query.filter_by(id=character_id).first()
+
+    if approved_character:
+        admin_character = AdminCharacters.query.filter_by(id=character_id).first()
+        return {
+            "status": "Done",
+            "logged_in": True,
+            "is_admin": bool(admin_character),
+            "character_name": character_name,
+        }
+    else:
+        return {
+            "status": "False",
+            "logged_in": False,
+            "is_admin": False,
+            "character_name": None,
+        }
