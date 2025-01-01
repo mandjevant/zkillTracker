@@ -5,6 +5,7 @@ from app import (
     EVE_AUTH_URL,
     EVE_REDIRECT_URI,
     EVE_CLIENT_ID,
+    OWNER_CHAR_ID,
 )
 from app.models import (
     Months,
@@ -14,8 +15,8 @@ from app.models import (
     Kills,
     MemberKills,
     Items,
-    AdminCharacters,
     ApprovedCharacters,
+    AdminCharacters,
 )
 from app.helpers import (
     serialize_corporation,
@@ -28,98 +29,76 @@ from app.helpers import (
     serialize_items,
     serialize_month_progress,
     get_payload,
+    check_user_status,
+    load_user,
+    is_admin,
 )
 from sqlalchemy import func, extract
 from app.populators import add_corp
 from app.taskmanager import KillRefreshTask, MemberRefreshTask
 from app.decorators import login_required, admin_required
+from dateutil.relativedelta import relativedelta
+from flask_socketio import emit, join_room, leave_room
 import threading
+import datetime
 import uuid
+import logging
+from flask_login import login_user, logout_user, current_user
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 active_task = None
 
 
-@app.route("/login")
+@app.route("/login", methods=["GET"])
 def login():
     auth_url = f"{EVE_AUTH_URL}?response_type=code&state={uuid.uuid4()}&redirect_uri={EVE_REDIRECT_URI}&client_id={EVE_CLIENT_ID}"
     return auth_url
 
 
-@app.route("/oauth-callback/", methods=["GET"])
+@app.route("/oauth-callback/", methods=["GET", "POST"])
 def oauth_callback():
     auth_code = request.args.get("code")
     if auth_code:
-        get_payload(auth_code)
+        character_id = get_payload(auth_code)
+        user = load_user(id=character_id)
+
+        user_status = check_user_status()
+        logging.debug(f"Login: user_status={user_status}")
+
+        if user:
+            login_user(user)
+            return redirect("http://localhost:3000/corporation"), 200
+
     return redirect("http://localhost:3000/"), 200
 
 
-@app.route("/check_approval")
-def check_approval():
-    character_id = session.get("character_id")
-    character_name = session.get("character_name")
-    if not character_id:
-        return jsonify({"status": "in_progress"})
-
-    approved_character = ApprovedCharacters.query.filter_by(
-        characterID=character_id
-    ).first()
-    print(approved_character)
-    if approved_character:
-        session["logged_in"] = True
-        admin_character = AdminCharacters.query.filter_by(
-            characterID=character_id
-        ).first()
-        session["is_admin"] = bool(admin_character)
+@app.route("/login_status")
+def login_status():
+    if current_user.is_authenticated:
+        is_admin_user = is_admin(current_user)
         return jsonify(
             {
-                "status": "Done",
-                "logged_in": True,
-                "is_admin": bool(admin_character),
-                "character_name": character_name,
+                "isLoggedIn": True,
+                "isAdmin": is_admin_user,
+                "characterName": session["character_name"],
             }
         )
     else:
-        return (
-            jsonify(
-                {
-                    "status": "False",
-                    "logged_in": False,
-                    "is_admin": False,
-                    "character_name": None,
-                }
-            ),
-            400,
-        )
-
-
-@app.route("/check_logged_in")
-def check_logged_in():
-    logged_in = session.get("logged_in", False)
-    is_admin = session.get("is_admin", False)
-    character_name = session.get("character_name", False)
-    return jsonify(
-        {
-            "logged_in": logged_in,
-            "is_admin": is_admin,
-            "character_name": character_name,
-        }
-    )
+        return jsonify({"isLoggedIn": False, "isAdmin": False, "character_name": ""})
 
 
 @app.route("/logout")
 @login_required
 def logout():
-    session["logged_in"] = False
-    session["is_admin"] = False
-    session["character_name"] = None
-    return jsonify(
-        {
-            "logged_in": session["logged_in"],
-            "is_admin": session["is_admin"],
-            "character_name": session["character_name"],
-        }
-    )
+    session.pop("character_id", None)
+    session.pop("character_name", None)
+    session.pop("access_token", None)
+    logout_user()
+
+    logging.debug(f'Logout: character_id={session.get("character_id")}')
+    return jsonify({"isLoggedIn": False, "isAdmin": False, "character_name": ""})
 
 
 @app.route("/corporation/<int:corporation_id>/months", methods=["GET"])
@@ -211,8 +190,9 @@ def get_corporation_members(corporation_id: int):
     return jsonify([serialize_member(member) for member in members])
 
 
-@app.route("/corporation/add/<int:corporation_id>")
+@app.route("/corporation/add/<int:corporation_id>", methods=["POST"])
 @login_required
+@admin_required
 def add_corporation(corporation_id: int):
     existing_corporation = (
         db.session.query(Corporation).filter_by(id=corporation_id).first()
@@ -221,12 +201,34 @@ def add_corporation(corporation_id: int):
     if existing_corporation:
         return jsonify({"error": "Corporation already exists"}), 400
 
-    return jsonify(add_corp(corporation_id))
+    return add_corp(corporation_id)
 
 
 @app.route("/member/<int:character_id>/monthlyaggregations", methods=["GET"])
 @login_required
 def get_member_monthly_aggregations(character_id: int):
+    date_range = (
+        db.session.query(
+            func.min(func.strftime("%Y-%m", Kills.datetime)).label("min_date"),
+            func.max(func.strftime("%Y-%m", Kills.datetime)).label("max_date"),
+        )
+        .join(MemberKills, MemberKills.killID == Kills.killID)
+        .filter(MemberKills.characterID == character_id)
+        .first()
+    )
+
+    if not date_range.min_date or not date_range.max_date:
+        return jsonify([])
+
+    start_date = datetime.datetime.strptime(date_range.min_date, "%Y-%m")
+    end_date = datetime.datetime.strptime(date_range.max_date, "%Y-%m")
+
+    year_months = []
+    current_date = start_date
+    while current_date <= end_date:
+        year_months.append(current_date.strftime("%Y-%m"))
+        current_date += relativedelta(months=1)
+
     results = (
         db.session.query(
             func.strftime("%Y-%m", Kills.datetime).label("year_month"),
@@ -244,11 +246,28 @@ def get_member_monthly_aggregations(character_id: int):
         .all()
     )
 
-    return jsonify([serialize_aggregations(agg) for agg in results])
+    results_dict = {
+        result.year_month: serialize_aggregations(result) for result in results
+    }
 
+    aggregated_results = []
+    for ym in year_months:
+        if ym in results_dict:
+            aggregated_results.append(results_dict[ym])
+        else:
+            aggregated_results.append(
+                {
+                    "year_month": ym,
+                    "totalValue": 0,
+                    "points": 0,
+                    "npc": 0,
+                    "solo": 0,
+                    "awox": 0,
+                    "killCount": 0,
+                }
+            )
 
-import datetime
-from dateutil.relativedelta import relativedelta
+    return jsonify(aggregated_results)
 
 
 @app.route("/member/<int:character_id>/aggregations", methods=["GET"])
@@ -315,28 +334,6 @@ def get_member_aggregations(character_id: int):
             )
 
     return jsonify(aggregated_results)
-
-
-# @app.route("/member/<int:character_id>/aggregations", methods=["GET"])
-# @login_required
-# def get_member_aggregations(character_id: int):
-#     results = (
-#         db.session.query(
-#             func.strftime("%Y-%m", Kills.datetime).label("year_month"),
-#             func.sum(Kills.totalValue).label("totalValue"),
-#             func.sum(Kills.points).label("points"),
-#             func.sum(Kills.npc).label("npc"),
-#             func.sum(Kills.solo).label("solo"),
-#             func.sum(Kills.awox).label("awox"),
-#             func.count().label("killCount"),
-#         )
-#         .select_from(MemberKills)
-#         .join(Kills, MemberKills.killID == Kills.killID)
-#         .filter(MemberKills.characterID == character_id)
-#         .all()
-#     )
-
-#     return jsonify([serialize_aggregations(agg) for agg in results])
 
 
 @app.route("/member/<int:character_id>/kills/all", methods=["GET"])
@@ -430,6 +427,7 @@ def get_month_corporation_kills(corporation_id: int, year_id: int, month_id: int
     "/member/<int:character_id>/change_corporation/<int:corporation_id>",
     methods=["PUT"],
 )
+@login_required
 @admin_required
 def change_member_corporation(character_id: int, corporation_id: int):
     corporation = db.session.query(Corporation).filter_by(id=corporation_id).first()
@@ -450,6 +448,7 @@ def change_member_corporation(character_id: int, corporation_id: int):
     "/members/add/<int:character_id>/<string:character_name>/<int:corporation_id>",
     methods=["POST"],
 )
+@login_required
 @admin_required
 def add_member(character_id: int, character_name: str, corporation_id: int):
     corporation = db.session.query(Corporation).filter_by(id=corporation_id).first()
@@ -474,6 +473,7 @@ def add_member(character_id: int, character_name: str, corporation_id: int):
 
 
 @app.route("/kills/add", methods=["GET"])
+@login_required
 @admin_required
 def add_kills():
     global active_task
@@ -493,6 +493,7 @@ def add_kills():
 
 
 @app.route("/task/status/<string:task_id>", methods=["GET"])
+@login_required
 @admin_required
 def task_status(task_id: str):
     global active_task
@@ -507,6 +508,7 @@ def task_status(task_id: str):
 
 
 @app.route("/members/add", methods=["GET"])
+@login_required
 @admin_required
 def add_members():
     global active_task
@@ -529,3 +531,87 @@ def add_members():
 def get_items():
     all_items = db.session.query(Items).all()
     return jsonify([serialize_items(item) for item in all_items])
+
+
+@app.route(
+    "/approved/add/<int:character_id>",
+    methods=["POST"],
+)
+@login_required
+@admin_required
+def add_approved(character_id: int):
+    existing_approved = (
+        db.session.query(ApprovedCharacters).filter_by(id=character_id).first()
+    )
+    if existing_approved is not None:
+        return jsonify({"error": "Approved character already exists"}), 400
+
+    new_approved = ApprovedCharacters(id=character_id)
+    db.session.add(new_approved)
+    db.session.commit()
+
+    return jsonify({"message": "Approved character added successfully"})
+
+
+@app.route(
+    "/approved/remove/<int:character_id>",
+    methods=["POST"],
+)
+@login_required
+@admin_required
+def remove_approved(character_id: int):
+    if character_id == int(OWNER_CHAR_ID):
+        return jsonify({"error": "Not allowed to remove owner approved character"}), 400
+
+    existing_approved = (
+        db.session.query(ApprovedCharacters).filter_by(id=character_id).first()
+    )
+    if existing_approved is None:
+        return jsonify({"error": "Approved character does not exists"}), 400
+
+    db.session.delete(existing_approved)
+    db.session.commit()
+
+    return jsonify({"message": "Approved character removed successfully"})
+
+
+@app.route(
+    "/admin/add/<int:character_id>",
+    methods=["POST"],
+)
+@login_required
+@admin_required
+def add_admin(character_id: int):
+    existing_admin = (
+        db.session.query(AdminCharacters).filter_by(id=character_id).first()
+    )
+    if existing_admin is not None:
+        return jsonify({"error": "Admin character already exists"}), 400
+
+    new_admin = AdminCharacters(id=character_id)
+    db.session.add(new_admin)
+    db.session.commit()
+
+    return jsonify({"message": "Admin character added successfully"})
+
+
+@app.route(
+    "/admin/remove/<int:character_id>",
+    methods=["POST"],
+)
+@login_required
+@admin_required
+def remove_admin(character_id: int):
+    if character_id == int(OWNER_CHAR_ID):
+        return jsonify({"error": "Not allowed to remove owner admin character"}), 400
+
+    existing_admin = (
+        db.session.query(AdminCharacters).filter_by(id=character_id).first()
+    )
+    if existing_admin is None:
+        return jsonify({"error": "Admin character does not exists"}), 400
+
+    db.session.delete(existing_admin)
+    db.session.commit()
+
+    return jsonify({"message": "Admin character removed successfully"})
