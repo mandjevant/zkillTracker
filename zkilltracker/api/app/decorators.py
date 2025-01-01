@@ -1,22 +1,25 @@
 from functools import wraps
-from flask import session
+from flask_login import current_user
+from app.models import AdminCharacters
+from app.helpers import is_admin
+from flask import jsonify
 
 
-def admin_required(f):
+def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not session.get("is_admin"):
+        if not current_user.is_authenticated:
             return "Forbidden", 403
         return f(*args, **kwargs)
 
     return decorated_function
 
 
-def login_required(f):
+def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not session.get("logged_in"):
-            return "Forbidden", 403
+        if not current_user.is_authenticated or not is_admin(current_user):
+            return jsonify({"redirect": "/login"}), 401
         return f(*args, **kwargs)
 
     return decorated_function
