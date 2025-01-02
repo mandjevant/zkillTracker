@@ -1,18 +1,19 @@
 import './App.css';
 import React, { useState, useEffect, createContext, useContext } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import { MantineProvider } from '@mantine/core';
 import CorporationView from './components/corporationView';
 import AllianceView from './components/allianceView';
 import MemberView from './components/memberView';
 import AdminView from './components/adminView';
 import LoginView from './components/loginView';
-import { Notifications } from '@mantine/notifications';
+import { cleanNotifications, Notifications, showNotification } from '@mantine/notifications';
 import '@mantine/core/styles.css';
 import '@mantine/dates/styles.css';
 import '@mantine/charts/styles.css';
 import axios from 'axios';
-import LogOut from './components/logout';
+import LogOut from './components/logoutButton';
+import { negaNotifProps, posiNotifProps } from './components/helpers';
 
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext)
@@ -22,29 +23,46 @@ export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loggedInCharName, setLoggedInCharName] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get("/check_logged_in")
-      .then(response => {
-        setIsLoggedIn(response.data.logged_in);
-        setIsAdmin(response.data.is_admin);
-        setLoggedInCharName(response.data.character_name);
-      })
-      .catch(error => {
-        console.error("There was an error checking the login state: ", error);
-      });
-  }, []);
+    const currentRoute = window.location.href;
+
+    if (currentRoute.substr(currentRoute.length - 1) === "/") {
+      axios.get("login_status")
+        .then((response) => {
+          const data = response.data;
+          setIsLoggedIn(data.isLoggedIn);
+          setIsAdmin(data.isAdmin);
+          setLoggedInCharName(data.characterName);
+    
+          if (data.isLoggedIn) {
+            navigate("/corporation");
+            cleanNotifications();
+            showNotification({
+              message: "Logged in!",
+              ...posiNotifProps
+            });
+          } else {
+            cleanNotifications();
+            showNotification({
+              message: "You are not approved to access the website.",
+              ...negaNotifProps
+            });
+          }
+
+        })
+        .catch((error) => {
+          console.error("There was an error fetching the login status:", error);
+        });
+      }
+    }, [navigate]);
 
   useEffect(() => {
-    if (isLoggedIn) {
-      window.location.replace("http://localhost:3000/corporation")
-    } else {
-      window.location.replace("http://localhost:3000/")
+    if (!isLoggedIn) {
+      navigate("/");
     }
-  }, [isLoggedIn])
-
-  console.log("isLoggedIn", isLoggedIn)
-  console.log("isAdmin", isAdmin)
+  }, [isLoggedIn, navigate]);
 
   return (
     <MantineProvider defaultColorScheme="dark">
@@ -53,7 +71,6 @@ export default function App() {
         {isLoggedIn ? (
           isAdmin ? (
             <Routes>
-              <Route path="/" element={<LoginView />} />
               <Route path="/corporation" element={<CorporationView />} />
               <Route path="/alliance" element={<AllianceView />} />
               <Route path="/members" element={<MemberView />} />
@@ -61,7 +78,6 @@ export default function App() {
             </Routes>
           ) : (
             <Routes>
-              <Route path="/" element={<LoginView />} />
               <Route path="/corporation" element={<CorporationView />} />
               <Route path="/alliance" element={<AllianceView />} />
               <Route path="/members" element={<MemberView />} />
