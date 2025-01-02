@@ -1,9 +1,3 @@
-// Member view
-// - Corp selector, member selector
-// - Line graph of progress over time (kills per month)
-// - Card of total kills in Sigma
-// - Table detailing kills per month
-// - Progress this month
 import { useState, useEffect, useCallback } from 'react'
 import Menu from './menu';
 import { IconCalendarMonth, IconInfinity } from '@tabler/icons-react';
