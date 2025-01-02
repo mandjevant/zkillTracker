@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import axios from 'axios';
 import { showNotification } from '@mantine/notifications';
 import { negaNotifProps } from './helpers';
 import { useAuth } from '../App';
 
 export default function LoginView() {
-  const [setLoggingIn] = useState(false);
   const { isLoggedIn } = useAuth();
 
   if (isLoggedIn) {
@@ -16,7 +15,6 @@ export default function LoginView() {
     axios.get("/login")
       .then(response => {
         const authURL = response.data;
-        setLoggingIn(true);
 
         window.location.href = authURL;
       })
