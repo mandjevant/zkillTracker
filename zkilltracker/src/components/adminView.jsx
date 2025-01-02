@@ -1,13 +1,16 @@
-// Admin view
-// - Refresh data button that refreshes kills&memberKills for current and past month.
-// - Add data via a popup and nice selectors:
-// 1. member using <characterID, characterName, corporationID>. Should return success
-// 2. Corporation+months <corporationID> hits off input for corporation+months, should return success
-// - File upload for alliance months after Shieks transposer
 import Menu from "./menu"
 import AddDataOverlay from "./adminOverlay"
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../App";
 
 export default function AdminView() {
+  const { isAdmin } = useAuth();
+  const navigate = useNavigate();
+
+  if (!isAdmin) {
+    navigate("/corporation")
+  }
+
   return (
     <div className="App">
       <Menu />
