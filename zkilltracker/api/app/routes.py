@@ -38,7 +38,6 @@ from app.populators import add_corp
 from app.taskmanager import KillRefreshTask, MemberRefreshTask
 from app.decorators import login_required, admin_required
 from dateutil.relativedelta import relativedelta
-from flask_socketio import emit, join_room, leave_room
 import threading
 import datetime
 import uuid
@@ -421,6 +420,54 @@ def get_month_corporation_kills(corporation_id: int, year_id: int, month_id: int
         )
 
     return jsonify([serialize_month_progress(kill) for kill in kills])
+
+
+@app.route(
+    "/corporation/<int:corporation_id>/low_kills/year/<int:year_id>/month/<int:month_id>",
+    methods=["GET"],
+)
+@login_required
+def get_low_kills(corporation_id: int, year_id: int, month_id: int):
+    subquery = (
+        db.session.query(
+            MemberKills.characterID, func.count(Kills.killID).label("kills")
+        )
+        .join(Kills, MemberKills.killID == Kills.killID)
+        .filter(
+            extract("year", Kills.datetime) == year_id,
+            extract("month", Kills.datetime) == month_id,
+        )
+        .group_by(MemberKills.characterID)
+        .subquery()
+    )
+
+    members_with_low_kills = (
+        db.session.query(
+            Members.characterName,
+            func.coalesce(subquery.c.kills, 0).label("kills"),
+        )
+        .outerjoin(subquery, Members.characterID == subquery.c.characterID)
+        .filter(
+            Members.corporationID == corporation_id,
+            (subquery.c.kills == None) | (subquery.c.kills < 10),
+        )
+        .order_by(func.coalesce(subquery.c.kills, 0).desc())
+        .all()
+    )
+
+    if not members_with_low_kills:
+        return (
+            jsonify(
+                {
+                    "error": "No members found with less than 10 kills or zero kills for the specified corporation in the given month"
+                }
+            ),
+            404,
+        )
+
+    return jsonify(
+        [serialize_month_progress(member) for member in members_with_low_kills]
+    )
 
 
 @app.route(
