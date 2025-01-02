@@ -3,21 +3,21 @@ import { negaNotifProps } from './helpers';
 import { Button } from "@mantine/core";
 import { useAuth } from "../App";
 import { showNotification } from "@mantine/notifications";
+import { useNavigate } from "react-router-dom";
 
 
 export default function LogOut() {
   const { loggedInCharName, setIsLoggedIn, setIsAdmin, setLoggedInCharName } = useAuth();
+  const navigate = useNavigate();
 
   function handleLogOut() {
     axios.get("/logout")
       .then(response => {
-        setIsLoggedIn(response.data.logged_in);
-        setIsAdmin(response.data.is_admin);
+        setIsLoggedIn(response.data.isLoggedIn);
+        setIsAdmin(response.data.isAdmin);
         setLoggedInCharName(response.data.character_name);
 
-        setTimeout(() => {
-          window.location.replace("http://localhost:3000/");
-        }, 0);
+        navigate("/");
       })
       .catch(error => {
         showNotification({
