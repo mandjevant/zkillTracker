@@ -18,9 +18,8 @@
 }
 
 .corporationChooser {
-  margin-top: 10vh;
-  display: flex;
-  justify-content: center;
+  position: fixed;
+  margin-top: 7.5vh;
 }
 
 .corporationGraphSelectors {
@@ -31,7 +30,7 @@
 
 .viewGraph {
   display: flex;
-  margin-top: 8vh;
+  margin-top: 4vh;
   width: 80vw;
   height: 60vh;
   flex-direction: row;
@@ -313,4 +312,24 @@
 
 .panel {
   height: 60vh;
+}
+
+.corpTableLastMonth {
+  margin-top: 1vh;
+}
+
+.corporationTabsList {
+  margin-top: 15vh;
+}
+
+.corpOverviewFocus {
+  display: flex;
+  justify-content: space-around;
+  width: 80vw;
+}
+
+.corpLastMonthFocus {
+  display: flex;
+  justify-content: space-around;
+  width: 80vw;
 }
