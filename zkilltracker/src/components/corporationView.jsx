@@ -217,7 +217,7 @@ export default function CorporationView() {
               <h5 className="tableTitle">
                 Characters who did not get 10+ kills past month
               </h5>
-              <Table.ScrollContainer minWidth={"13vw"} className="corpTableLastMonth" maxHeight={"60vh"}>
+              <Table.ScrollContainer minWidth={"13vw"} className="corpTableLastMonth">
                 <Table horizontalSpacing="md">
                   <Table.Thead>
                     <Table.Tr>

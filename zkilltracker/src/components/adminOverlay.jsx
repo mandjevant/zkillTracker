@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TextInput, NumberInput, Modal, Button, Switch, Tabs } from '@mantine/core';
-import { showNotification, cleanNotifications } from '@mantine/notifications';
+import { showNotification } from '@mantine/notifications';
 import { posiNotifProps, negaNotifProps } from './helpers';
 import axios from 'axios';
 
@@ -18,36 +18,55 @@ export default function AddDataOverlay() {
   const [modalOpened, setModalOpened] = useState(false);
   const [addRemApproved, setAddRemApproved] = useState(true);
   const [addRemAdmin, setAddRemAdmin] = useState(true);
+  const [buttonsDisabled, setButtonsDisabled] = useState(false);
+
+  // useEffect(() => {
+  //   let interval;
+  //   if (taskId) {
+  //     interval = setInterval(() => {
+  //       axios.get(`/task/status/${taskId}`)
+  //         .then(response => {
+  //           if (response.data.status === "Done") {
+  //             setTaskId(null);
+  //             cleanNotifications();
+  //             showNotification({
+  //               message: "Refresh task completed successfully!",
+  //               ...posiNotifProps
+  //             });
+  //             clearInterval(interval);
+  //           }
+  //         })
+  //         .catch(error => {
+  //           setTaskId(null);
+  //           cleanNotifications();
+  //           showNotification({
+  //             message: "Failed to check task status!",
+  //             ...negaNotifProps
+  //           });
+  //           console.log(error)
+  //           clearInterval(interval);
+  //         });
+  //     }, 1000);
+  //   }
+  //   return () => clearInterval(interval);
+  // }, [taskId]);
 
   useEffect(() => {
-    let interval;
+    let timer;
+  
     if (taskId) {
-      interval = setInterval(() => {
-        axios.get(`/task/status/${taskId}`)
-          .then(response => {
-            if (response.data.status === "Done") {
-              setTaskId(null);
-              cleanNotifications();
-              showNotification({
-                message: "Refresh task completed successfully!",
-                ...posiNotifProps
-              });
-              clearInterval(interval);
-            }
-          })
-          .catch(error => {
-            setTaskId(null);
-            cleanNotifications();
-            showNotification({
-              message: "Failed to check task status!",
-              ...negaNotifProps
-            });
-            console.log(error)
-            clearInterval(interval);
-          });
-      }, 1000);
+      setButtonsDisabled(true);
+  
+      timer = setTimeout(() => {
+        setTaskId(null);
+        setButtonsDisabled(false);
+      }, 300000);
     }
-    return () => clearInterval(interval);
+  
+    return () => {
+      clearTimeout(timer);
+      setButtonsDisabled(false);
+    };
   }, [taskId]);
 
   async function handleAddCorporation() {
@@ -283,10 +302,10 @@ export default function AddDataOverlay() {
             centered
           >
             <p>Beware, manual edits to the members table are lost when members data is refreshed.</p>
-            <Button onClick={handleConfirmRefresh} color="red">
+            <Button onClick={handleConfirmRefresh} color="red" disabled={buttonsDisabled}>
               Confirm
             </Button>
-            <Button onClick={() => setModalOpened(false)} style={{ marginLeft: '10px' }}>
+            <Button onClick={() => setModalOpened(false)} style={{ marginLeft: '10px' }} disabled={buttonsDisabled}>
               Cancel
             </Button>
           </Modal>
