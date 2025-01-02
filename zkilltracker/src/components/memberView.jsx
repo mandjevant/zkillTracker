@@ -7,7 +7,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Menu from './menu';
 import { IconCalendarMonth, IconInfinity } from '@tabler/icons-react';
-import { Tabs, Select, Paper, Table, Button } from '@mantine/core';
+import { Tabs, Select, Paper, Table, Button, NumberFormatter } from '@mantine/core';
 import axios from 'axios';
 import { negaNotifProps } from './helpers';
 import { showNotification } from '@mantine/notifications';
@@ -28,6 +28,8 @@ export default function MemberView() {
   const [allItems, setAllItems] = useState([])
   const [displayOption, setDisplayOption] = useState("killCount")
   const displayOptions = ["killCount", "totalValue", "solo", "awox", "npc", "points"]
+  const formatFinancial = (value) => `$${Math.round(value).toLocaleString()}`;
+  const formatInteger = (value) => Math.round(value).toLocaleString();
 
   useEffect(() => {
     axios.get("/corporations")
@@ -152,7 +154,9 @@ export default function MemberView() {
         const rows = res.data.map((kill) => (
           <Table.Tr key={kill.killID} onDoubleClick={() => window.open(`https://zkillboard.com/kill/${kill.killID}/`, '_blank')}>
             <Table.Td>{getItemName(kill.shipTypeID)}</Table.Td>
-            <Table.Td>{kill.damageDone}</Table.Td>
+            <Table.Td >
+              <NumberFormatter value={kill.damageDone} thousandSeparator />
+            </Table.Td>
             <Table.Td>{kill.finalBlow}</Table.Td>
             <Table.Td>{getItemName(kill.attackerShipTypeID)}</Table.Td>
             <Table.Td>{kill.solo}</Table.Td>
@@ -209,14 +213,17 @@ export default function MemberView() {
                 data={monthlyAggKillData}
                 dataKey={"year_month"}
                 series={[
-                  { name: displayOption, color: "#1F77B4" }
+                  { 
+                    name: displayOption, 
+                    color: "#1F77B4", 
+                  }
                 ]}
                 curveType="bump"
                 withLegend
-                // legendProps={{ content: <ChartLegend />, }}
                 tooltipAnimationDuration={100}
                 xAxisLabel={"Month-Year"}
                 yAxisLabel={displayOption}
+                valueFormatter={displayOption === "totalValue" ? formatFinancial : formatInteger}
               />
             </Tabs.Panel>
 
