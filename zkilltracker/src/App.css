@@ -123,11 +123,12 @@
 }
 
 #allianceGraph {
-  margin-top: 20vh;
+  margin-top: 15vh;
 }
 
 #allianceLineChart {
   width: 65vw;
+  height: 70vh;
 }
 
 #memberLineChart {
