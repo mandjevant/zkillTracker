@@ -47,9 +47,6 @@ from flask_login import login_user, logout_user, current_user
 logging.basicConfig(level=logging.DEBUG)
 
 
-active_task = None
-
-
 @app.route("/login", methods=["GET"])
 def login():
     auth_url = f"{EVE_AUTH_URL}?response_type=code&state={uuid.uuid4()}&redirect_uri={EVE_REDIRECT_URI}&client_id={EVE_CLIENT_ID}"
@@ -522,55 +519,22 @@ def add_member(character_id: int, character_name: str, corporation_id: int):
 @login_required
 @admin_required
 def add_kills():
-    global active_task
-    if active_task is not None:
-        if active_task.status == "Done":
-            active_task = None
+    uniq_id = uuid.uuid4()
+    newTask = KillRefreshTask(run_id=uniq_id)
+    threading.Thread(target=newTask.get_kills).start()
 
-    if active_task is None:
-        uniq_id = uuid.uuid4()
-        newTask = KillRefreshTask(run_id=uniq_id)
-        active_task = newTask
-        threading.Thread(target=newTask.get_kills).start()
-
-        return jsonify({"task_id": uniq_id})
-    else:
-        return jsonify({"error": "A refresh task is currently active"}), 400
-
-
-@app.route("/task/status/<string:task_id>", methods=["GET"])
-@login_required
-@admin_required
-def task_status(task_id: str):
-    global active_task
-    if active_task == None:
-        return jsonify({"error": "No refresh tasks were started"}), 400
-
-    if active_task.run_id != task_id:
-        return jsonify({"error": f"Refresh task with id {task_id} is unknown"}), 400
-
-    if active_task.run_id == task_id:
-        return jsonify({"status": active_task.status})
+    return jsonify({"task_id": uniq_id})
 
 
 @app.route("/members/add", methods=["GET"])
 @login_required
 @admin_required
 def add_members():
-    global active_task
-    if active_task is not None:
-        if active_task.status == "Done":
-            active_task = None
+    uniq_id = uuid.uuid4()
+    newTask = MemberRefreshTask(run_id=uniq_id)
+    threading.Thread(target=newTask.fill_members).start()
 
-    if active_task is None:
-        uniq_id = uuid.uuid4()
-        newTask = MemberRefreshTask(run_id=uniq_id)
-        active_task = newTask
-        threading.Thread(target=newTask.fill_members).start()
-
-        return jsonify({"task_id": uniq_id})
-    else:
-        return jsonify({"error": "A refresh task is currently active"}), 400
+    return jsonify({"task_id": uniq_id})
 
 
 @app.route("/items", methods=["GET"])
