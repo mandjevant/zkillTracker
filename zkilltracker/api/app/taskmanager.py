@@ -22,8 +22,10 @@ class KillRefreshTask:
 
             if current_month == 1:
                 previous_month = 12
+                previous_year = current_year - 1
             else:
                 previous_month = current_month - 1
+                previous_year = current_year
 
             failed_combinations = list()
 
@@ -31,7 +33,7 @@ class KillRefreshTask:
                 res_curr = self.get_corp_kills(corp_id[0], current_year, current_month)
                 time.sleep(5)
                 res_prev = self.get_corp_kills(
-                    corp_id[0], current_year - 1, previous_month
+                    corp_id[0], previous_year, previous_month
                 )
                 failed_combinations.extend(res_curr)
                 failed_combinations.extend(res_prev)
