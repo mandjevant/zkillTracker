@@ -93,7 +93,6 @@ def login_status():
 def logout():
     session.pop("character_id", None)
     session.pop("character_name", None)
-    session.pop("access_token", None)
     logout_user()
 
     logging.debug(f'Logout: character_id={session.get("character_id")}')

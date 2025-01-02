@@ -182,7 +182,6 @@ def get_payload(authorization_code: str):
 
     session["character_id"] = character_id
     session["character_name"] = character_name
-    session["access_token"] = access_token
 
     return character_id
 
