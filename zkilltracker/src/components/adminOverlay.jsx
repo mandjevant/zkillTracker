@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TextInput, NumberInput, Modal, Button } from '@mantine/core';
+import { TextInput, NumberInput, Modal, Button, Switch } from '@mantine/core';
 import { showNotification, cleanNotifications } from '@mantine/notifications';
 import { posiNotifProps, negaNotifProps } from './helpers';
 import axios from 'axios';
@@ -12,8 +12,12 @@ export default function AddDataOverlay() {
   const [amCharacterId, setAmCharacterId] = useState('');
   const [amCharacterName, setAmCharacterName] = useState('');
   const [cmcNewCorporationId, setCmcNewCorporationId] = useState('');
+  const [approvedCharToAdd, setApprovedCharToAdd] = useState('');
+  const [adminCharToAdd, setAdminCharToAdd] = useState('');
   const [taskId, setTaskId] = useState(null);
   const [modalOpened, setModalOpened] = useState(false);
+  const [addRemApproved, setAddRemApproved] = useState(true);
+  const [addRemAdmin, setAddRemAdmin] = useState(true);
 
   useEffect(() => {
     let interval;
@@ -38,16 +42,17 @@ export default function AddDataOverlay() {
               message: "Failed to check task status!",
               ...negaNotifProps
             });
+            console.log(error)
             clearInterval(interval);
           });
-      }, 5000);
+      }, 1000);
     }
     return () => clearInterval(interval);
   }, [taskId]);
 
   async function handleAddCorporation() {
     try {
-      await axios.post(`/corporation/add/${amCorporationId}`);
+      await axios.post(`/corporation/add/${acCorporationId}`);
       showNotification({
         message: "Corporation added successfully!",
         ...posiNotifProps
@@ -122,6 +127,44 @@ export default function AddDataOverlay() {
     }
   };
 
+  async function handleAddApprovedChar() {
+    try {
+      if (addRemApproved) {
+        await axios.post(`/approved/add/${approvedCharToAdd}`);
+      } else {
+        await axios.post(`/approved/remove/${approvedCharToAdd}`);
+      }
+      showNotification({
+        message: `Approved character ${ addRemApproved ? "added" : "removed" } successfully!`,
+        ...posiNotifProps
+      });
+    } catch (error) {
+      showNotification({
+        message: `Failed to ${ addRemApproved ? "add" : "remove" } approved character!`,
+        ...negaNotifProps
+      });
+    }
+  }
+
+  async function handleAddAdminChar() {
+    try {
+      if (addRemAdmin) {
+        await axios.post(`/admin/add/${adminCharToAdd}`);
+      } else {
+        await axios.post(`/admin/remove/${adminCharToAdd}`);
+      }
+      showNotification({
+        message: `Admin character ${ addRemAdmin ? "added" : "removed" } successfully!`,
+        ...posiNotifProps
+      });
+    } catch (error) {
+      showNotification({
+        message: `Failed to ${ addRemApproved ? "add" : "remove" } admin character!`,
+        ...negaNotifProps
+      });
+    }
+  }
+
   async function handleConfirmRefresh() {
     setModalOpened(false);
     handleAddMembers();
@@ -133,7 +176,6 @@ export default function AddDataOverlay() {
       <h3 className="adminH3">Add Corporation</h3>
       <div className="rowGroup">
         <NumberInput
-          className="adminInput"
           label="Corporation ID"
           value={acCorporationId}
           onChange={(value) => setAcCorporationId(value)}
@@ -203,6 +245,60 @@ export default function AddDataOverlay() {
         </Button>
       </div>
 
+      <h3 className="adminH3">Add Approved Character</h3>
+      <div className="rowGroup">
+        <div className="rowGroupInputs">
+          <NumberInput
+            label="Character ID"
+            value={approvedCharToAdd}
+            onChange={(value) => setApprovedCharToAdd(value)}
+            min={1}
+          />
+          <Switch
+            className="adminSwitch"
+            checked={addRemApproved}
+            onChange={(event) => setAddRemApproved(event.currentTarget.checked)}
+            onLabel="Add"
+            offLabel="Remove"
+            size="xl"
+          />
+        </div>
+        <Button
+          className="postButton"
+          onClick={handleAddApprovedChar}
+          disabled={!approvedCharToAdd}
+        >
+          {addRemApproved ? "Add Approved Character" : "Remove Approved" }
+        </Button>
+      </div>
+
+      <h3 className="adminH3">Add Admin Character</h3>
+      <div className="rowGroup">
+        <div className="rowGroupInputs">
+          <NumberInput
+            label="Character ID"
+            value={adminCharToAdd}
+            onChange={(value) => setAdminCharToAdd(value)}
+            min={1}
+          />
+          <Switch
+            className="adminSwitch"
+            checked={addRemAdmin}
+            onChange={(event) => setAddRemAdmin(event.currentTarget.checked)}
+            onLabel="Add"
+            offLabel="Remove"
+            size="xl"
+          />
+        </div>
+        <Button
+          className="postButton"
+          onClick={handleAddAdminChar}
+          disabled={!adminCharToAdd}
+        >
+          {addRemAdmin ? "Add Admin Character" : "Remove Admin" }
+        </Button>
+      </div>
+
       <div className="refreshButtons">
         <div className="refreshItem">
           <h3 className="refreshH3">Refresh kill data</h3>
@@ -227,8 +323,9 @@ export default function AddDataOverlay() {
         opened={modalOpened}
         onClose={() => setModalOpened(false)}
         title="Confirmation"
+        centered
       >
-        <p>Beware, manual edits to the members table are lost when members is refreshed.</p>
+        <p>Beware, manual edits to the members table are lost when members data is refreshed.</p>
         <Button onClick={handleConfirmRefresh} color="red">
           Confirm
         </Button>
