@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TextInput, NumberInput, Modal, Button, Switch } from '@mantine/core';
+import { TextInput, NumberInput, Modal, Button, Switch, Tabs } from '@mantine/core';
 import { showNotification, cleanNotifications } from '@mantine/notifications';
 import { posiNotifProps, negaNotifProps } from './helpers';
 import axios from 'axios';
@@ -173,166 +173,181 @@ export default function AddDataOverlay() {
 
   return (
     <div className="adminOverlay">
-      <h3 className="adminH3">Add Corporation</h3>
-      <div className="rowGroup">
-        <NumberInput
-          label="Corporation ID"
-          value={acCorporationId}
-          onChange={(value) => setAcCorporationId(value)}
-          min={1}
-        />
-        <Button
-          className="postButton"
-          onClick={handleAddCorporation}
-          disabled={!acCorporationId}
-        >
-          Add Corporation
-        </Button>
-      </div>
+      <Tabs variant="pills" defaultValue="data">
+        <Tabs.List>
+          <Tabs.Tab value="data">
+            Data
+          </Tabs.Tab>
+          <Tabs.Tab value="characters">
+            Characters
+          </Tabs.Tab>
+        </Tabs.List>
 
-      <h3 className="adminH3">Change Member Corporation</h3>
-      <div className="rowGroup">
-        <div className="rowGroupInputs">
-          <NumberInput
-            label="Character ID"
-            value={cmcCharacterId}
-            onChange={(value) => setCmcCharacterId(value)}
-            min={1}
-          />
-          <NumberInput
-            label="New Corporation ID"
-            value={cmcNewCorporationId}
-            onChange={(value) => setCmcNewCorporationId(value)}
-            min={1}
-          />
-        </div>
-        <Button
-          className="postButton"
-          onClick={handleChangeMemberCorporation}
-          disabled={!cmcCharacterId || !cmcNewCorporationId}
-        >
-          Change Corporation
-        </Button>
-      </div>
-
-      <h3 className="adminH3">Add Member</h3>
-      <div className="rowGroup">
-        <div className="rowGroupInputs">
-          <NumberInput
-            label="Character ID"
-            value={amCharacterId}
-            onChange={(value) => setAmCharacterId(value)}
-            min={1}
-          />
-          <TextInput
-            label="Character Name"
-            value={amCharacterName}
-            onChange={(event) => setAmCharacterName(event.currentTarget.value)}
-          />
-          <NumberInput
-            label="Corporation ID"
-            value={amCorporationId}
-            onChange={(value) => setAmCorporationId(value)}
-            min={1}
-          />
-        </div>
-        <Button
-          className="postButton"
-          onClick={handleAddMember}
-          disabled={!amCharacterId || !amCharacterName || !amCorporationId}
-        >
-          Add Member
-        </Button>
-      </div>
-
-      <h3 className="adminH3">Add Approved Character</h3>
-      <div className="rowGroup">
-        <div className="rowGroupInputs">
-          <NumberInput
-            label="Character ID"
-            value={approvedCharToAdd}
-            onChange={(value) => setApprovedCharToAdd(value)}
-            min={1}
-          />
-          <Switch
-            className="adminSwitch"
-            checked={addRemApproved}
-            onChange={(event) => setAddRemApproved(event.currentTarget.checked)}
-            onLabel="Add"
-            offLabel="Remove"
-            size="xl"
-          />
-        </div>
-        <Button
-          className="postButton"
-          onClick={handleAddApprovedChar}
-          disabled={!approvedCharToAdd}
-        >
-          {addRemApproved ? "Add Approved Character" : "Remove Approved" }
-        </Button>
-      </div>
-
-      <h3 className="adminH3">Add Admin Character</h3>
-      <div className="rowGroup">
-        <div className="rowGroupInputs">
-          <NumberInput
-            label="Character ID"
-            value={adminCharToAdd}
-            onChange={(value) => setAdminCharToAdd(value)}
-            min={1}
-          />
-          <Switch
-            className="adminSwitch"
-            checked={addRemAdmin}
-            onChange={(event) => setAddRemAdmin(event.currentTarget.checked)}
-            onLabel="Add"
-            offLabel="Remove"
-            size="xl"
-          />
-        </div>
-        <Button
-          className="postButton"
-          onClick={handleAddAdminChar}
-          disabled={!adminCharToAdd}
-        >
-          {addRemAdmin ? "Add Admin Character" : "Remove Admin" }
-        </Button>
-      </div>
-
-      <div className="refreshButtons">
-        <div className="refreshItem">
-          <h3 className="refreshH3">Refresh kill data</h3>
-          <div className="refreshTaskButton">
-            <Button onClick={handleAddKills} disabled={!!taskId}>
-              {taskId ? `Task in progress... (ID: ${taskId})` : 'Start Refresh Task'}
+        <Tabs.Panel value="data" className="panel">
+          <h3 className="adminH3">Add Corporation</h3>
+          <div className="rowGroup">
+            <NumberInput
+              label="Corporation ID"
+              value={acCorporationId}
+              onChange={(value) => setAcCorporationId(value)}
+              min={1}
+            />
+            <Button
+              className="postButton"
+              onClick={handleAddCorporation}
+              disabled={!acCorporationId}
+            >
+              Add Corporation
             </Button>
           </div>
-        </div>
 
-        <div className="refreshItem">
-          <h3 className="refreshH3">Refresh member data</h3>
-          <div className="refreshTaskButton">
-            <Button onClick={() => setModalOpened(true)} disabled={!!taskId}>
-              {taskId ? `Task in progress... (ID: ${taskId})` : 'Start Refresh Task'}
+          <h3 className="adminH3">Change Member Corporation</h3>
+          <div className="rowGroup">
+            <div className="rowGroupInputs">
+              <NumberInput
+                label="Character ID"
+                value={cmcCharacterId}
+                onChange={(value) => setCmcCharacterId(value)}
+                min={1}
+              />
+              <NumberInput
+                label="New Corporation ID"
+                value={cmcNewCorporationId}
+                onChange={(value) => setCmcNewCorporationId(value)}
+                min={1}
+              />
+            </div>
+            <Button
+              className="postButton"
+              onClick={handleChangeMemberCorporation}
+              disabled={!cmcCharacterId || !cmcNewCorporationId}
+            >
+              Change Corporation
             </Button>
           </div>
-        </div>
-      </div>
 
-      <Modal
-        opened={modalOpened}
-        onClose={() => setModalOpened(false)}
-        title="Confirmation"
-        centered
-      >
-        <p>Beware, manual edits to the members table are lost when members data is refreshed.</p>
-        <Button onClick={handleConfirmRefresh} color="red">
-          Confirm
-        </Button>
-        <Button onClick={() => setModalOpened(false)} style={{ marginLeft: '10px' }}>
-          Cancel
-        </Button>
-      </Modal>
+          <h3 className="adminH3">Add Member</h3>
+          <div className="rowGroup">
+            <div className="rowGroupInputs">
+              <NumberInput
+                label="Character ID"
+                value={amCharacterId}
+                onChange={(value) => setAmCharacterId(value)}
+                min={1}
+              />
+              <TextInput
+                label="Character Name"
+                value={amCharacterName}
+                onChange={(event) => setAmCharacterName(event.currentTarget.value)}
+              />
+              <NumberInput
+                label="Corporation ID"
+                value={amCorporationId}
+                onChange={(value) => setAmCorporationId(value)}
+                min={1}
+              />
+            </div>
+            <Button
+              className="postButton"
+              onClick={handleAddMember}
+              disabled={!amCharacterId || !amCharacterName || !amCorporationId}
+            >
+              Add Member
+            </Button>
+          </div>
+
+          <div className="refreshButtons">
+            <div className="refreshItem">
+              <h3 className="refreshH3">Refresh kill data</h3>
+              <div className="refreshTaskButton">
+                <Button onClick={handleAddKills} disabled={!!taskId}>
+                  {taskId ? `Task in progress... (ID: ${taskId})` : 'Start Refresh Task'}
+                </Button>
+              </div>
+            </div>
+
+            <div className="refreshItem">
+              <h3 className="refreshH3">Refresh member data</h3>
+              <div className="refreshTaskButton">
+                <Button onClick={() => setModalOpened(true)} disabled={!!taskId}>
+                  {taskId ? `Task in progress... (ID: ${taskId})` : 'Start Refresh Task'}
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <Modal
+            opened={modalOpened}
+            onClose={() => setModalOpened(false)}
+            title="Confirmation"
+            centered
+          >
+            <p>Beware, manual edits to the members table are lost when members data is refreshed.</p>
+            <Button onClick={handleConfirmRefresh} color="red">
+              Confirm
+            </Button>
+            <Button onClick={() => setModalOpened(false)} style={{ marginLeft: '10px' }}>
+              Cancel
+            </Button>
+          </Modal>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="characters" className="panel">
+          <h3 className="adminH3">Add Approved Character</h3>
+          <div className="rowGroup">
+            <div className="rowGroupInputs">
+              <NumberInput
+                label="Character ID"
+                value={approvedCharToAdd}
+                onChange={(value) => setApprovedCharToAdd(value)}
+                min={1}
+              />
+              <Switch
+                className="adminSwitch"
+                checked={addRemApproved}
+                onChange={(event) => setAddRemApproved(event.currentTarget.checked)}
+                onLabel="Add"
+                offLabel="Remove"
+                size="xl"
+              />
+            </div>
+            <Button
+              className="postButton"
+              onClick={handleAddApprovedChar}
+              disabled={!approvedCharToAdd}
+            >
+              {addRemApproved ? "Add Approved Character" : "Remove Approved" }
+            </Button>
+          </div>
+
+          <h3 className="adminH3">Add Admin Character</h3>
+          <div className="rowGroup">
+            <div className="rowGroupInputs">
+              <NumberInput
+                label="Character ID"
+                value={adminCharToAdd}
+                onChange={(value) => setAdminCharToAdd(value)}
+                min={1}
+              />
+              <Switch
+                className="adminSwitch"
+                checked={addRemAdmin}
+                onChange={(event) => setAddRemAdmin(event.currentTarget.checked)}
+                onLabel="Add"
+                offLabel="Remove"
+                size="xl"
+              />
+            </div>
+            <Button
+              className="postButton"
+              onClick={handleAddAdminChar}
+              disabled={!adminCharToAdd}
+            >
+              {addRemAdmin ? "Add Admin Character" : "Remove Admin" }
+            </Button>
+          </div>
+        </Tabs.Panel>
+      </Tabs>
     </div>
   );
 };
