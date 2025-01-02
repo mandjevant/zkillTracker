@@ -163,9 +163,9 @@
 }
 
 .adminOverlay {
-  margin-top: 15vh;
+  margin-top: 7.5vh;
   width: 60vw;
-  height: 60vh;
+  height: 80vh;
   display: flex;
   justify-content: space-around;
   flex-direction: column;
@@ -304,4 +304,9 @@
   top: 1vh;
   right: 1vw;
   width: 5vw;
+}
+
+.adminSwitch {
+  margin-top: 2.5vh;
+  margin-left: 3vw;
 }
