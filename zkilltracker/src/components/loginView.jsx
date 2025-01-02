@@ -1,6 +1,6 @@
 import React from 'react';
 import axios from 'axios';
-import { showNotification } from '@mantine/notifications';
+import { cleanNotifications, showNotification } from '@mantine/notifications';
 import { negaNotifProps } from './helpers';
 import { useAuth } from '../App';
 
@@ -19,6 +19,7 @@ export default function LoginView() {
         window.location.href = authURL;
       })
       .catch(error => {
+        cleanNotifications()
         showNotification({
           message: "Failed to log in.",
           ...negaNotifProps

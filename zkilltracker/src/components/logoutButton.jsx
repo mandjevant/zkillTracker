@@ -2,7 +2,7 @@ import axios from "axios";
 import { negaNotifProps } from './helpers';
 import { Button } from "@mantine/core";
 import { useAuth } from "../App";
-import { showNotification } from "@mantine/notifications";
+import { cleanNotifications, showNotification } from "@mantine/notifications";
 import { useNavigate } from "react-router-dom";
 
 
@@ -20,6 +20,7 @@ export default function LogOut() {
         navigate("/");
       })
       .catch(error => {
+        cleanNotifications()
         showNotification({
             message: "Could not process logout",
             ...negaNotifProps
