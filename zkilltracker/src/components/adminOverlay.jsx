@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TextInput, NumberInput, Modal, Button, Switch, Tabs } from '@mantine/core';
+import { TextInput, NumberInput, Modal, Button, Switch, Tabs, FileInput } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
 import { posiNotifProps, negaNotifProps } from './helpers';
 import axios from 'axios';
@@ -21,37 +21,7 @@ export default function AddDataOverlay() {
   const [buttonsDisabled, setButtonsDisabled] = useState(false);
   const [ccaCorporationId, setCcaCorporationId] = useState('');
   const [ccaNewAllianceId, setCcaNewAllianceId] = useState('');
-
-  // useEffect(() => {
-  //   let interval;
-  //   if (taskId) {
-  //     interval = setInterval(() => {
-  //       axios.get(`/task/status/${taskId}`)
-  //         .then(response => {
-  //           if (response.data.status === "Done") {
-  //             setTaskId(null);
-  //             cleanNotifications();
-  //             showNotification({
-  //               message: "Refresh task completed successfully!",
-  //               ...posiNotifProps
-  //             });
-  //             clearInterval(interval);
-  //           }
-  //         })
-  //         .catch(error => {
-  //           setTaskId(null);
-  //           cleanNotifications();
-  //           showNotification({
-  //             message: "Failed to check task status!",
-  //             ...negaNotifProps
-  //           });
-  //           console.log(error)
-  //           clearInterval(interval);
-  //         });
-  //     }, 1000);
-  //   }
-  //   return () => clearInterval(interval);
-  // }, [taskId]);
+  const [file, setFile] = useState(null);
 
   useEffect(() => {
     let timer;
@@ -220,6 +190,38 @@ export default function AddDataOverlay() {
   async function handleConfirmRefresh() {
     setModalOpened(false);
     handleAddMembers();
+  };
+
+  const handleAddMonthsData = () => {
+    if (!file) {
+      showNotification({
+        message: "Please select a CSV file before uploading",
+        ...negaNotifProps
+      });
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    axios.post('/upload_file', formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    })
+    .then(response => {
+      showNotification({
+        message: "CSV file uploaded successfully!",
+        ...posiNotifProps
+      });
+    })
+    .catch(error => {
+      showNotification({
+        message: "Error uploading CSV file",
+        ...negaNotifProps
+      });
+      console.error('Upload error:', error);
+    });
   };
 
 
@@ -430,6 +432,27 @@ export default function AddDataOverlay() {
               disabled={!adminCharToAdd}
             >
               {addRemAdmin ? "Add Admin Character" : "Remove Admin" }
+            </Button>
+          </div>
+
+          <h3 className="adminH3">Add months data via file upload</h3>
+          <div className="rowGroup">
+            <div className="rowGroupInputs">
+              <FileInput
+                label="Upload .xlsx file"
+                placeholder="Click to choose"
+                accept=".xlsx"
+                clearable
+                value={file}
+                onChange={setFile}
+              />
+            </div>
+            <Button
+              className="postButton"
+              onClick={handleAddMonthsData}
+              disabled={!file}
+            >
+              Add Alliance data
             </Button>
           </div>
         </Tabs.Panel>
