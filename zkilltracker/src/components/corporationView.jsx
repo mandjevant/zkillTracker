@@ -10,12 +10,13 @@ import { IconListTree, IconCalendarMonth } from '@tabler/icons-react';
 export default function CorporationView() {
   const [activeCorporationId, setActiveCorporationId] = useState(98753041);
   const [allCorporations, setAllCorporations] = useState([]);
-  const [monthsData, setMonthsData] = useState("")
-  const corpDisplayOptions = ["Ships", "Points", "Isk"]
-  const [displayOptionsDropdownText, setDisplayOptionsDropdownText] = useState("Ships")
-  const [corpMonthKillRows, setCorpMonthKillRows] = useState([])
-  const [corpLastMonthKillRows, setCorpLastMonthKillRows] = useState([])
-  const [corpLastMonthLowKillRows, setCorpLastMonthLowKillRows] = useState([])
+  const [monthsData, setMonthsData] = useState("");
+  const corpDisplayOptions = ["Ships", "Points", "Isk"];
+  const [displayOptionsDropdownText, setDisplayOptionsDropdownText] = useState("Ships");
+  const [corpMonthKillRows, setCorpMonthKillRows] = useState([]);
+  const [corpLastMonthKillRows, setCorpLastMonthKillRows] = useState([]);
+  const [corpLastMonthLowKillRows, setCorpLastMonthLowKillRows] = useState([]);
+  const [corpDeadbeatsRows, setCorpDeadbeatsRows] = useState([]);
 
   useEffect(() => {
     axios.get("/corporations")
@@ -121,6 +122,23 @@ export default function CorporationView() {
           ...negaNotifProps
         })
         console.error("Error fetching last month's low kills: ", error);
+      })
+
+    axios.get(`/corporation/${activeCorporationId.toString()}/deadbeats`)
+      .then(res => {
+        const deadbeats = res.data.deadbeats;  // Access the deadbeats array
+        const rows = deadbeats.map((charName, index) => (
+          <Table.Tr key={index}>
+            <Table.Td>{charName}</Table.Td>
+          </Table.Tr>
+        ));
+        setCorpDeadbeatsRows(rows)
+      }).catch(error => {
+        showNotification({
+          message: "Error fetching possible deadbeats",
+          ...negaNotifProps
+        })
+        console.error("Error fetching possible deadbeats: ", error);
       })
   }, [activeCorporationId])
 
@@ -229,7 +247,22 @@ export default function CorporationView() {
                 </Table>
               </Table.ScrollContainer>
             </div>
-          </div>
+            <div>
+              <h5 className="tableTitle">
+                Possible deadbeats
+              </h5>
+              <Table.ScrollContainer minWidth={"13vw"} className="corpTableLastMonth">
+                <Table horizontalSpacing="md">
+                  <Table.Thead>
+                    <Table.Tr>
+                      <Table.Th>Character</Table.Th>
+                    </Table.Tr>
+                  </Table.Thead>
+                  <Table.Tbody>{corpDeadbeatsRows}</Table.Tbody>
+                </Table>
+              </Table.ScrollContainer>
+            </div>
+          </div>          
         </Tabs.Panel>
       </Tabs>
     </div>
