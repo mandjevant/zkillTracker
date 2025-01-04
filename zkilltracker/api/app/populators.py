@@ -119,16 +119,8 @@ def update_corp():
 
         db.session.commit()
 
-        return (
-            jsonify(
-                {"status": "success", "message": "Corporations updated successfully"}
-            ),
-            200,
-        )
-
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": str(e)}), 500
 
 
 def fill_members():
