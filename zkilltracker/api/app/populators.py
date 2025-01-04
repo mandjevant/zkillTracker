@@ -1,17 +1,20 @@
-import requests
 from flask import jsonify
-from app import db
-from app.models import Corporation, Months, Members
+from app import db, app
+from app.models import Corporation, Months, Members, Kills, MemberKills, Losses
+import aiohttp
+import json
+import datetime
+import requests
+import json
+import time
 
 
 def add_corp(corporation_id: int):
     try:
-        # Fetch the JSON data from the zkill API
         url = f"https://zkillboard.com/api/stats/corporationID/{corporation_id}/"
         response = requests.get(url)
         data = response.json()
 
-        # Extract the required data for the 'months' table
         months_data = data.get("months", {})
 
         for month, stats in months_data.items():
@@ -30,7 +33,6 @@ def add_corp(corporation_id: int):
             )
             db.session.merge(entry)
 
-        # Extract the required data for the 'corporation' table
         info = data.get("info", {})
         corporation_entry = Corporation(
             id=corporation_id,
@@ -73,7 +75,6 @@ def fill_members():
 
 
 def fill_members_corp(corporation_id: int):
-    # Get all members from api
     response = requests.get(f"https://evewho.com/api/corplist/{corporation_id}")
     data = response.json()
 
@@ -84,11 +85,9 @@ def fill_members_corp(corporation_id: int):
     members_to_add = []
     members_to_update = []
 
-    # Get all members in database
     db_members = Members.query.all()
     db_members_dict = {member.character_id: member for member in db_members}
 
-    # Create a set of all_api_chars for quick lookup
     api_char_ids = {char[0] for char in all_api_chars}
 
     for char_id, name, corp_id in all_api_chars:
@@ -117,3 +116,102 @@ def fill_members_corp(corporation_id: int):
         db.session.bulk_save_objects(members_to_update)
 
     db.session.commit()
+
+
+def save_kill_to_db(data):
+    with app.app_context():
+        try:
+            kill_id = data.get("killmail_id", 0)
+            existing_kill = Kills.query.filter_by(killID=kill_id).first()
+
+            if not existing_kill:
+                kill_hash = data.get("zkb").get("hash")
+                esi_url = (
+                    f"https://esi.evetech.net/latest/killmails/{kill_id}/{kill_hash}/"
+                )
+                esi_response = requests.get(esi_url)
+                esi_data = esi_response.json()
+
+                kill_entry = Kills(
+                    killID=kill_id,
+                    killHash=kill_hash,
+                    locationID=data.get("zkb").get("locationID"),
+                    totalValue=data.get("zkb").get("totalValue"),
+                    points=data.get("zkb").get("points"),
+                    npc=data.get("zkb").get("npc"),
+                    solo=data.get("zkb").get("solo"),
+                    awox=data.get("zkb").get("awox"),
+                    datetime=datetime.fromisoformat(
+                        esi_data.get("killmail_time").replace("Z", "+00:00")
+                    ),
+                    shipTypeID=esi_data.get("victim").get("ship_type_id"),
+                )
+
+                db.session.add(kill_entry)
+
+                attackers = esi_data.get("attackers", [])
+                for attacker in attackers:
+                    if attacker.get("alliance_id") == 99011223:
+                        attacker_entry = MemberKills(
+                            killID=kill_id,
+                            characterID=attacker.get("character_id"),
+                            damageDone=attacker.get("damage_done"),
+                            finalBlow=attacker.get("final_blow"),
+                            shipTypeID=attacker.get("ship_type_id"),
+                        )
+                        db.session.add(attacker_entry)
+
+                db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+
+
+def save_loss_to_db(data):
+    with app.app_context():
+        try:
+            kill_id = data.get("killmail_id", 0)
+            existing_loss = Losses.query.filter_by(killID=kill_id).first()
+
+            if not existing_loss:
+                kill_hash = data.get("zkb").get("hash")
+                esi_url = (
+                    f"https://esi.evetech.net/latest/killmails/{kill_id}/{kill_hash}/"
+                )
+                esi_response = requests.get(esi_url)
+                esi_data = esi_response.json()
+
+                loss_entry = Losses(
+                    killID=kill_id,
+                    killHash=kill_hash,
+                    locationID=data.get("zkb").get("locationID"),
+                    totalValue=data.get("zkb").get("totalValue"),
+                    points=data.get("zkb").get("points"),
+                    npc=data.get("zkb").get("npc"),
+                    solo=data.get("zkb").get("solo"),
+                    awox=data.get("zkb").get("awox"),
+                    datetime=datetime.fromisoformat(
+                        esi_data.get("killmail_time").replace("Z", "+00:00")
+                    ),
+                    shipTypeID=esi_data.get("victim").get("ship_type_id"),
+                )
+
+                db.session.add(loss_entry)
+                db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+
+
+async def start_websocket_listener():
+    async with aiohttp.ClientSession() as session:
+        async with session.ws_connect("wss://zkillboard.com/websocket/") as ws:
+            await ws.send_str(
+                json.dumps({"action": "sub", "channel": "alliance:99011223"})
+            )
+            while True:
+                msg = await ws.receive()
+                if msg.type == aiohttp.WSMsgType.TEXT:
+                    data = json.loads(msg.data)
+                    if data.get("alliance_id") == "99011223":
+                        save_loss_to_db(data)
+                    else:
+                        save_kill_to_db(data)
