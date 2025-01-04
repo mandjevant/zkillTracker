@@ -1,8 +1,8 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from os import environ
-import uuid
 import flask_login
+import uuid
 
 
 db = SQLAlchemy()
