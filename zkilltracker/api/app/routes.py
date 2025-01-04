@@ -34,24 +34,24 @@ from app.helpers import (
     is_admin,
 )
 from app.taskmanager import KillRefreshTask, MemberRefreshTask
-from app.populators import add_corp, start_websocket_listener, update_corp
+from app.populators import add_corp, run_asyncio_in_thread, update_corp
 from app.decorators import login_required, admin_required
-from flask_login import login_user, logout_user, current_user, secure_filename
+from flask_login import login_user, logout_user, current_user
 from dateutil.relativedelta import relativedelta
+from werkzeug.utils import secure_filename
 from sqlalchemy import func, extract
 import pandas as pd
 import threading
 import datetime
 import logging
-import asyncio
 import sqlite3
 import uuid
 import os
 
 
 logging.basicConfig(level=logging.DEBUG)
-# asyncio.get_event_loop
-# asyncio.run(start_websocket_listener())
+socketThread = threading.Thread(target=run_asyncio_in_thread)
+socketThread.start()
 
 
 @app.route("/login", methods=["GET"])
