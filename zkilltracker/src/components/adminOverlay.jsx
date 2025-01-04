@@ -339,7 +339,7 @@ export default function AddDataOverlay() {
             <div className="refreshItem">
               <h3 className="refreshH3">Refresh kill data</h3>
               <div className="refreshTaskButton">
-                <Button onClick={handleAddKills} disabled={!!taskId}>
+                <Button className="refreshButton" onClick={handleAddKills} disabled={!!taskId}>
                   {taskId ? `Task in progress... (ID: ${taskId})` : 'Start Refresh Task'}
                 </Button>
               </div>
@@ -348,7 +348,7 @@ export default function AddDataOverlay() {
             <div className="refreshItem">
               <h3 className="refreshH3">Refresh member data</h3>
               <div className="refreshTaskButton">
-                <Button onClick={() => setModalOpened(true)} disabled={!!taskId}>
+                <Button className="refreshButton" onClick={() => setModalOpened(true)} disabled={!!taskId}>
                   {taskId ? `Task in progress... (ID: ${taskId})` : 'Start Refresh Task'}
                 </Button>
               </div>
@@ -357,7 +357,7 @@ export default function AddDataOverlay() {
             <div className="refreshItem">
               <h3 className="refreshH3">Refresh corporation data</h3>
               <div className="refreshTaskButton">
-                <Button onClick={handleRefreshCorporations} disabled={!!taskId}>
+                <Button className="refreshButton" onClick={handleRefreshCorporations} disabled={!!taskId}>
                   {taskId ? `Task in progress... (ID: ${taskId})` : 'Start Refresh Task'}
                 </Button>
               </div>
