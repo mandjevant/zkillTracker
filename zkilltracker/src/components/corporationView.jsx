@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Menu from './menu';
 import axios from 'axios';
-import { Select, Table, Tabs } from '@mantine/core';
+import { Select, Table, Tabs, Tooltip } from '@mantine/core';
 import { LineChart } from "@mantine/charts";
 import { showNotification } from '@mantine/notifications';
 import { negaNotifProps } from './helpers';
@@ -160,12 +160,26 @@ export default function CorporationView() {
       </div>
       <Tabs variant="pills" defaultValue="overview">
         <Tabs.List className="corporationTabsList">
-          <Tabs.Tab value="overview" leftSection={<IconListTree />}>
-            Overview
-          </Tabs.Tab>
-          <Tabs.Tab value="lastMonth" leftSection={<IconCalendarMonth />}>
-            Last month
-          </Tabs.Tab>
+          <Tooltip
+            multiline
+            w={"13vw"}
+            transitionProps={{ duration: 150 }}
+            label="Data in chart is not limited to the Sigma Grindset alliance. Character information is limited to Sigma kills"
+          >
+            <Tabs.Tab value="overview" leftSection={<IconListTree />}>
+              Overview
+            </Tabs.Tab>
+          </Tooltip>
+          <Tooltip
+            multiline
+            w={"13vw"}
+            transitionProps={{ duration: 150 }}
+            label="Possible deadbeats are defined as; characters who have gotten a kill in the past 6 months, but not in the past 2 months."
+          >
+            <Tabs.Tab value="lastMonth" leftSection={<IconCalendarMonth />}>
+              Last month
+            </Tabs.Tab>
+          </Tooltip>
         </Tabs.List>
 
         <Tabs.Panel value="overview">
