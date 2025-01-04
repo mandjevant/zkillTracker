@@ -46,6 +46,11 @@ import asyncio
 import uuid
 
 
+from flask import jsonify
+from sqlalchemy import func, and_
+from app.models import Members, MemberKills
+
+
 logging.basicConfig(level=logging.DEBUG)
 asyncio.run(start_websocket_listener())
 
@@ -188,6 +193,51 @@ def get_corporation_members(corporation_id: int):
         return jsonify({"error": "Corporation not found or has no members"}), 404
 
     return jsonify([serialize_member(member) for member in members])
+
+
+@app.route("/corporation/<int:corporation_id>/deadbeats", methods=["GET"])
+@login_required
+def get_corporation_deadbeats(corporation_id: int):
+    try:
+        six_months_ago = datetime.datetime.utcnow() - datetime.timedelta(days=6 * 30)
+        two_months_ago = datetime.datetime.utcnow() - datetime.timedelta(days=2 * 30)
+
+        recent_killers_subquery = (
+            db.session.query(MemberKills.characterID)
+            .join(Members, Members.characterID == MemberKills.characterID)
+            .filter(
+                Members.corporationID == corporation_id,
+                MemberKills.killID.in_(
+                    db.session.query(MemberKills.killID).filter(
+                        MemberKills.datetime >= two_months_ago
+                    )
+                ),
+            )
+            .distinct()
+            .subquery()
+        )
+
+        deadbeats_query = (
+            db.session.query(Members.characterName)
+            .join(MemberKills, Members.characterID == MemberKills.characterID)
+            .filter(
+                Members.corporationID == corporation_id,
+                MemberKills.killID.in_(
+                    db.session.query(MemberKills.killID).filter(
+                        MemberKills.datetime >= six_months_ago
+                    )
+                ),
+                ~Members.characterID.in_(recent_killers_subquery),
+            )
+            .distinct()
+            .all()
+        )
+
+        deadbeat_names = [member.characterName for member in deadbeats_query]
+        return jsonify({"deadbeats": deadbeat_names}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/corporation/add/<int:corporation_id>", methods=["POST"])
