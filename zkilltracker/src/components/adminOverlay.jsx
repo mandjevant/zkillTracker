@@ -19,6 +19,8 @@ export default function AddDataOverlay() {
   const [addRemApproved, setAddRemApproved] = useState(true);
   const [addRemAdmin, setAddRemAdmin] = useState(true);
   const [buttonsDisabled, setButtonsDisabled] = useState(false);
+  const [ccaCorporationId, setCcaCorporationId] = useState('');
+  const [ccaNewAllianceId, setCcaNewAllianceId] = useState('');
 
   // useEffect(() => {
   //   let interval;
@@ -94,6 +96,21 @@ export default function AddDataOverlay() {
     } catch (error) {
       showNotification({
         message: "Failed to change member corporation!",
+        ...negaNotifProps
+      });
+    }
+  };
+
+  async function handleChangeCorporationAlliance() {
+    try {
+      await axios.post(`/corporation/${ccaCorporationId}/change_alliance/${ccaNewAllianceId}`);
+      showNotification({
+        message: "Corporation alliance changed successfully!",
+        ...posiNotifProps
+      });
+    } catch (error) {
+      showNotification({
+        message: "Failed to change corporation alliance!",
         ...negaNotifProps
       });
     }
@@ -233,6 +250,31 @@ export default function AddDataOverlay() {
               disabled={!acCorporationId}
             >
               Add Corporation
+            </Button>
+          </div>
+
+          <h3 className="adminH3">Change Corporation Alliance</h3>
+          <div className="rowGroup">
+            <div className="rowGroupInputs">
+              <NumberInput
+                label="Corporation ID"
+                value={ccaCorporationId}
+                onChange={(value) => setCcaCorporationId(value)}
+                min={1}
+              />
+              <NumberInput
+                label="New Alliance ID"
+                value={ccaNewAllianceId}
+                onChange={(value) => setCcaNewAllianceId(value)}
+                min={1}
+              />
+            </div>
+            <Button
+              className="postButton"
+              onClick={handleChangeCorporationAlliance}
+              disabled={!ccaCorporationId || !ccaNewAllianceId}
+            >
+              Change Corporation Alliance
             </Button>
           </div>
 
