@@ -1,10 +1,10 @@
 from flask import jsonify
 from app import db, app
 from app.models import Corporation, Months, Members, Kills, MemberKills, Losses
-import aiohttp
-import json
 import datetime
 import requests
+import aiohttp
+import asyncio
 import json
 import time
 
@@ -275,3 +275,9 @@ async def start_websocket_listener():
                         save_loss_to_db(data)
                     else:
                         save_kill_to_db(data)
+
+
+def run_asyncio_in_thread():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(start_websocket_listener())
