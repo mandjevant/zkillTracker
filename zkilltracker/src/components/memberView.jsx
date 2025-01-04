@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Menu from './menu';
 import { IconCalendarMonth, IconInfinity } from '@tabler/icons-react';
-import { Tabs, Select, Paper, Table, Button, NumberFormatter } from '@mantine/core';
+import { Tabs, Select, Paper, Table, Button, NumberFormatter, Tooltip } from '@mantine/core';
 import axios from 'axios';
 import { negaNotifProps } from './helpers';
 import { showNotification } from '@mantine/notifications';
@@ -193,9 +193,16 @@ export default function MemberView() {
         <div className="viewWindow">
           <Tabs variant="pills" defaultValue="monthly">
             <Tabs.List>
-              <Tabs.Tab value="monthly" leftSection={<IconCalendarMonth />}>
-                Monthly
-              </Tabs.Tab>
+              <Tooltip
+                multiline
+                w={"13vw"}
+                transitionProps={{ duration: 150 }}
+                label="Only includes Sigma kills, but from any corporation. There may be a delay (up to 4 weeks) after a character joins/switches corporation. Blame evewho :)"
+              >
+                <Tabs.Tab value="monthly" leftSection={<IconCalendarMonth />}>
+                  Monthly
+                </Tabs.Tab>
+              </Tooltip>
               <Tabs.Tab value="totals" leftSection={<IconInfinity />}>
                 Totals
               </Tabs.Tab>
