@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from os import environ
 import flask_login
 import uuid
+import os
 
 
 db = SQLAlchemy()
@@ -10,7 +11,10 @@ app = Flask(__name__)
 db_name = "zkillboard_stats.db"
 app.secret_key = str(uuid.uuid4())
 login_manager = flask_login.LoginManager()
+UPLOAD_FOLDER = "/tmp/uploads"
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_name}?check_same_thread=False"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
 EVE_CLIENT_ID = environ.get("CLIENT_ID")
