@@ -216,30 +216,30 @@ def get_corporation_deadbeats(corporation_id: int):
 
         recent_killers_subquery = (
             db.session.query(MemberKills.characterID)
-            .join(Members, Members.characterID == MemberKills.characterID)
+            .join(Kills, Kills.killID == MemberKills.killID)
             .filter(
-                Members.corporationID == corporation_id,
-                MemberKills.killID.in_(
-                    db.session.query(MemberKills.killID).filter(
-                        MemberKills.datetime >= two_months_ago
+                MemberKills.characterID.in_(
+                    db.session.query(Members.characterID).filter(
+                        Members.corporationID == corporation_id
                     )
                 ),
+                Kills.datetime >= two_months_ago,
             )
             .distinct()
-            .subquery()
-        )
+        ).with_entities(MemberKills.characterID)
 
         deadbeats_query = (
             db.session.query(Members.characterName)
-            .join(MemberKills, Members.characterID == MemberKills.characterID)
             .filter(
                 Members.corporationID == corporation_id,
-                MemberKills.killID.in_(
-                    db.session.query(MemberKills.killID).filter(
-                        MemberKills.datetime >= six_months_ago
-                    )
-                ),
-                ~Members.characterID.in_(recent_killers_subquery),
+                Members.characterID.notin_(recent_killers_subquery),
+                db.session.query(MemberKills)
+                .join(Kills, Kills.killID == MemberKills.killID)
+                .filter(
+                    MemberKills.characterID == Members.characterID,
+                    Kills.datetime >= six_months_ago,
+                )
+                .exists(),
             )
             .distinct()
             .all()
@@ -249,6 +249,7 @@ def get_corporation_deadbeats(corporation_id: int):
         return jsonify({"deadbeats": deadbeat_names}), 200
 
     except Exception as e:
+        print(e)
         return jsonify({"error": str(e)}), 500
 
 
