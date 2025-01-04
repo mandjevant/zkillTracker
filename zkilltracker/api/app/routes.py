@@ -36,17 +36,21 @@ from app.helpers import (
 from app.taskmanager import KillRefreshTask, MemberRefreshTask
 from app.populators import add_corp, start_websocket_listener, update_corp
 from app.decorators import login_required, admin_required
-from flask_login import login_user, logout_user, current_user
+from flask_login import login_user, logout_user, current_user, secure_filename
 from dateutil.relativedelta import relativedelta
 from sqlalchemy import func, extract
+import pandas as pd
 import threading
 import datetime
 import logging
 import asyncio
+import sqlite3
 import uuid
+import os
 
 
 logging.basicConfig(level=logging.DEBUG)
+# asyncio.get_event_loop
 # asyncio.run(start_websocket_listener())
 
 
@@ -720,3 +724,34 @@ def remove_admin(character_id: int):
     db.session.commit()
 
     return jsonify({"message": "Admin character removed successfully"})
+
+
+@app.route("/upload_file", methods=["POST"])
+@login_required
+@admin_required
+def upload_file():
+    if "file" not in request.files:
+        return jsonify({"error": "No file part"}), 400
+
+    file = request.files["file"]
+    if file.filename == "":
+        return jsonify({"error": "No selected file"}), 400
+
+    if not file.filename.endswith(".csv"):
+        return jsonify({"error": "File must be a CSV"}), 400
+
+    try:
+        file_path = os.path.join(
+            app.config["UPLOAD_FOLDER"], secure_filename(file.filename)
+        )
+        file.save(file_path)
+
+        df = pd.read_excel(file_path, header=0)
+        conn = sqlite3.connect("instance/zkillboard_stats.db")
+        df.to_sql("alliance", conn, if_exists="append", index=False)
+        conn.commit()
+        conn.close()
+
+        return jsonify({"message": "CSV processed and data stored successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
