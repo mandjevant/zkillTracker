@@ -127,7 +127,9 @@ def get_corporation(corporation_id: int):
 @app.route("/corporations", methods=["GET"])
 @login_required
 def get_all_corporations():
-    corporations = db.session.query(Corporation).all()
+    corporations = (
+        db.session.query(Corporation).filter(Corporation.allianceID == 99011223).all()
+    )
 
     return jsonify([serialize_corporation(corp) for corp in corporations])
 
@@ -485,6 +487,23 @@ def change_member_corporation(character_id: int, corporation_id: int):
         return jsonify({"error": "Member not found"}), 404
 
     member.corporationID = corporation_id
+    db.session.commit()
+
+    return jsonify({"message": "Corporation updated successfully"})
+
+
+@app.route(
+    "/corporation/<int:corporation_id>/change_alliance/<int:alliance_id>",
+    methods=["PUT"],
+)
+@login_required
+@admin_required
+def change_corporation_alliance(corporation_id: int, alliance_id: int):
+    corporation = db.session.query(Corporation).filter_by(id=corporation_id).first()
+    if corporation is None:
+        return jsonify({"error": "Corporation not found"}), 404
+
+    corporation.allianceID = alliance_id
     db.session.commit()
 
     return jsonify({"message": "Corporation updated successfully"})
