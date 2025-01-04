@@ -130,6 +130,22 @@ export default function AddDataOverlay() {
     }
   };
 
+  async function handleRefreshCorporations() {
+    try {
+      const response = await axios.get(`/corporations/refresh`);
+      setTaskId(response.data.task_id);
+      showNotification({
+        message: "Refresh task started!",
+        ...posiNotifProps
+      });
+    } catch (error) {
+      showNotification({
+        message: "Failed to start refresh task!",
+        ...negaNotifProps
+      });
+    }
+  }
+
   async function handleAddMembers() {
     try {
       const response = await axios.get(`/members/add`);
@@ -289,6 +305,15 @@ export default function AddDataOverlay() {
               <h3 className="refreshH3">Refresh member data</h3>
               <div className="refreshTaskButton">
                 <Button onClick={() => setModalOpened(true)} disabled={!!taskId}>
+                  {taskId ? `Task in progress... (ID: ${taskId})` : 'Start Refresh Task'}
+                </Button>
+              </div>
+            </div>
+
+            <div className="refreshItem">
+              <h3 className="refreshH3">Refresh corporation data</h3>
+              <div className="refreshTaskButton">
+                <Button onClick={handleRefreshCorporations} disabled={!!taskId}>
                   {taskId ? `Task in progress... (ID: ${taskId})` : 'Start Refresh Task'}
                 </Button>
               </div>
