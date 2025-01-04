@@ -1,0 +1,1 @@
+Page to manage activity of corporations and members in Sigma alliance in Eve online.

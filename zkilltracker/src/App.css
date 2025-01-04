@@ -1,0 +1,340 @@
+.App {
+  background-color: #1e1e1e;
+  min-height: 100vh;
+  display: flex;
+  align-items: top;
+  justify-content: center;
+  font-size: 18px;
+  color: #ffffff;
+  flex-direction: row;
+}
+
+.corporationChooser label {
+  font-size: 16px;
+}
+
+.corporationGraphSelectors label {
+  font-size: 16px;
+}
+
+.corporationChooser {
+  position: fixed;
+  margin-top: 7.5vh;
+}
+
+.corporationGraphSelectors {
+  display: flex;
+  flex-direction: column;
+  margin-left: 2vw;
+}
+
+.viewGraph {
+  display: flex;
+  margin-top: 4vh;
+  width: 80vw;
+  height: 60vh;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.hamburgerMenu {
+  position: absolute;
+  top: 2.5vh;
+  left: 1.5vw;
+  height: 3vh;
+  aspect-ratio: 1;
+  cursor: pointer;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.hamburgerMenu span {
+  display: block;
+  width: 100%;
+  height: 0.4vh;
+  background: #cdcdcd;
+  border-radius: 4px;
+  position: relative;
+}
+
+.menuHolder {
+  display: flex;
+  position: fixed;
+  left: 0;
+  height: 100vh;
+  text-align: left;
+  z-index: 999;
+}
+
+.sideMenu {
+  background-color: #333;
+  width: 10vw;
+  border-radius: 10px 0 0 10px;
+  padding-top: 7.5vh;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
+}
+
+.sideMenu ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.sideMenu li {
+  padding: 1vh .5vw;
+  font-size: 22px;
+  background-color: #444;
+  border-radius: 8px;
+  margin-bottom: 1vh;
+  transition: background-color 0.3s ease;
+}
+
+.sideMenu li:hover {
+  background-color: #555;
+}
+
+.sideMenu li label {
+  cursor: pointer;
+  color: #cdcdcd;
+  margin-left: 0.25vw;
+}
+
+.allianceGraphSelectors {
+  display: flex;
+  flex-direction: column;
+  margin-left: 2vw;
+  width: 15vw;
+}
+
+.allianceGraphSelectors p {
+  margin-left: 4.5vw;
+  font-size: 22px;
+  margin-bottom: -.25vh;
+}
+
+.mantine-MultiSelect-input {
+  max-width: 15-vw;
+}
+
+.mantine-LineChart-axisLabel {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+#allianceGraph {
+  margin-top: 15vh;
+}
+
+#allianceLineChart {
+  width: 65vw;
+  height: 70vh;
+}
+
+#memberLineChart {
+  width: 65vw;
+  height: 65vh;
+}
+
+.customAllianceLegend {
+  display: flex !important;
+  flex-direction: row;
+  justify-content: flex-end;
+}
+
+.legendItem {
+  margin-left: 1vw !important;
+}
+
+.viewWindow {
+  width: 65vw;
+}
+
+.memberView {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  margin-top: 15vh;
+}
+
+.postButton {
+  margin-top: 2.3vh;
+  width: 10vw !important;
+}
+
+.adminOverlay {
+  margin-top: 10vh;
+  width: 60vw;
+  height: 80vh;
+  display: flex;
+  justify-content: space-around;
+  flex-direction: column;
+}
+
+.rowGroup {
+  display: flex !important;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.mantine-Input-wrapper {
+  margin-right: 1vw;
+}
+
+.mantine-NumberInput-wrapper {
+  margin-right: 1vw;
+}
+
+.rowGroupInputs {
+  display: flex;
+  flex-direction: row;
+  justify-content: start;
+}
+
+.adminH3 {
+  margin-bottom: 0vh;
+  margin-top: 3vh;
+}
+
+.refreshTaskButton {
+  width: 10vw !important;
+}
+
+.refreshButtons {
+  margin-top: 3vh;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.refreshItem {
+  display: flex;
+  flex-direction: column;
+}
+
+.refreshH3 {
+  margin-bottom: 1vh;
+}
+
+.menuItem {
+  margin-top: 1vh;
+  width: 8vw !important;
+  display: flex !important;
+  justify-content: start !important;
+}
+
+.lili {
+  list-style-type: none;
+}
+
+.navs {
+  text-align: left;
+  text-decoration: none;
+  color: white;
+}
+
+.mantine-Drawer-inner {
+  width: 14vw !important;
+}
+
+.mantine-Notifications-root {
+  position: fixed;
+  bottom: 1vh;
+  right: 1vw;
+  width: 20vw;
+}
+
+.mantine-Notifications-notification {
+  margin-bottom: 1vh;
+}
+
+.memberTotalsPaper {
+  width: 12vw;
+  margin-right: 2vw;
+}
+
+.charNameLink { 
+  display: flex;
+  flex-direction: row;
+  width: fit-content;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.zkillLinkButton {
+  margin-left: 2vw;
+}
+
+.papers {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  margin-top: 1vh;
+}
+
+.memberSelectors {
+  margin-top: 4vh;
+}
+
+.memberSelector {
+  margin-bottom: 1vh;
+}
+
+.table {
+  margin-top: 3vh;
+}
+
+.tableTitle {
+  margin-bottom: 0.5vh;
+}
+
+.corpTable {
+  margin-top: 1vh;
+}
+
+.AppLogin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logOutButton {
+  z-index: 99999;
+  position: fixed !important;
+  top: 1vh;
+  right: 1vw;
+  width: 5vw;
+}
+
+.adminSwitch {
+  margin-top: 2.5vh;
+  margin-left: 3vw;
+}
+
+.panel {
+  height: 60vh;
+}
+
+.corpTableLastMonth {
+  margin-top: 1vh;
+}
+
+.corporationTabsList {
+  margin-top: 15vh;
+}
+
+.corpOverviewFocus {
+  display: flex;
+  justify-content: space-around;
+  width: 80vw;
+}
+
+.corpLastMonthFocus {
+  display: flex;
+  justify-content: space-around;
+  width: 80vw;
+}
+
+.refreshButton {
+  max-width: 15vw;
+}
