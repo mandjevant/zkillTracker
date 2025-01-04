@@ -33,18 +33,21 @@ from app.helpers import (
     load_user,
     is_admin,
 )
-from sqlalchemy import func, extract
-from app.populators import add_corp
 from app.taskmanager import KillRefreshTask, MemberRefreshTask
+from app.populators import add_corp, start_websocket_listener
 from app.decorators import login_required, admin_required
+from flask_login import login_user, logout_user, current_user
 from dateutil.relativedelta import relativedelta
+from sqlalchemy import func, extract
 import threading
 import datetime
-import uuid
 import logging
-from flask_login import login_user, logout_user, current_user
+import asyncio
+import uuid
+
 
 logging.basicConfig(level=logging.DEBUG)
+asyncio.run(start_websocket_listener())
 
 
 @app.route("/login", methods=["GET"])
