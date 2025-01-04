@@ -201,6 +201,48 @@ class Kills(db.Model):
         return f"<Kills killID={self.killID}, killHash={self.killHash}, locationID={self.locationID}, totalValue={self.totalValue}, points={self.points}, npc={self.npc}, solo={self.solo}, awox={self.awox}, datetime={self.datetime}, shipTypeID={self.shipTypeID}>"
 
 
+class Losses(db.Model):
+    __tablename__ = "losses"
+
+    killID = db.Column(db.Integer, primary_key=True)
+    killHash = db.Column(db.String, nullable=False)
+    locationID = db.Column(db.Integer, nullable=False)
+    totalValue = db.Column(db.Integer, nullable=False)
+    points = db.Column(db.Integer, nullable=False)
+    npc = db.Column(db.Integer, nullable=False)
+    solo = db.Column(db.Integer, nullable=False)
+    awox = db.Column(db.Integer, nullable=False)
+    datetime = db.Column(db.String, nullable=False)
+    shipTypeID = db.Column(db.Integer, nullable=False)
+
+    def __init__(
+        self,
+        killID,
+        killHash,
+        locationID,
+        totalValue,
+        points,
+        npc,
+        solo,
+        awox,
+        datetime,
+        shipTypeID,
+    ):
+        self.killID = killID
+        self.killHash = killHash
+        self.locationID = locationID
+        self.totalValue = totalValue
+        self.points = points
+        self.npc = npc
+        self.solo = solo
+        self.awox = awox
+        self.datetime = datetime
+        self.shipTypeID = shipTypeID
+
+    def __repr__(self):
+        return f"<Loss killID={self.killID}, killHash={self.killHash}, locationID={self.locationID}, totalValue={self.totalValue}, points={self.points}, npc={self.npc}, solo={self.solo}, awox={self.awox}, datetime={self.datetime}, shipTypeID={self.shipTypeID}>"
+
+
 class MemberKills(db.Model):
     __tablename__ = "memberKills"
 
