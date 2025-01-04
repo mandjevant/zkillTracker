@@ -18,7 +18,7 @@ export default function AllianceView() {
   const today = new Date();
   const lyMonth = new Date(today.getFullYear() - 1, today.getMonth(), 1);
   const curMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-  const displayOptions = ["kills", "mains", "activeMains", "killsPerActiveMain", "percentageOfAllianceKills"]
+  const displayOptions = ["kills", "mains", "activeMains", "killsPerActiveMain", "percentageOfAllianceKills", "growthRate"]
   const colors = [
     "#1F77B4", "#FF7F0E", "#2CA02C", "#D62728", "#9467BD",
     "#8C564B", "#E377C2", "#7F7F7F", "#BCBD22", "#17BECF",
@@ -101,7 +101,7 @@ export default function AllianceView() {
 
         allianceWithMonthYearConcat.forEach(item => {
           // eslint-disable-next-line
-          const { monthYearConcat, corporationTicker, kills, mains, activeMains, killsPerActiveMain, percentageOfAllianceKills } = item;
+          const { monthYearConcat, corporationTicker, kills, mains, activeMains, killsPerActiveMain, percentageOfAllianceKills, growthRate } = item;
 
           if (!dict[monthYearConcat]) {
             dict[monthYearConcat] = {};
