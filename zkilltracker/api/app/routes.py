@@ -34,7 +34,7 @@ from app.helpers import (
     is_admin,
 )
 from app.taskmanager import KillRefreshTask, MemberRefreshTask
-from app.populators import add_corp, start_websocket_listener
+from app.populators import add_corp, start_websocket_listener, update_corp
 from app.decorators import login_required, admin_required
 from flask_login import login_user, logout_user, current_user
 from dateutil.relativedelta import relativedelta
@@ -47,7 +47,7 @@ import uuid
 
 
 logging.basicConfig(level=logging.DEBUG)
-asyncio.run(start_websocket_listener())
+# asyncio.run(start_websocket_listener())
 
 
 @app.route("/login", methods=["GET"])
@@ -151,8 +151,25 @@ def get_alliance_data():
     )
 
     result = query.filter(Alliance.corporationTicker.in_(corporations)).all()
+    serialized_result = [serialize_alliance(entry) for entry in result]
 
-    return jsonify([serialize_alliance(entry) for entry in result])
+    serialized_result.sort(key=lambda x: (x["year"], x["month"]))
+
+    previous_mains = {ticker: None for ticker in corporations}
+
+    for entry in serialized_result:
+        corporation_ticker = entry["corporationTicker"]
+        current_mains = entry["mains"]
+
+        if previous_mains[corporation_ticker] is None:
+            entry["growthRate"] = 1  # No previous month data
+        else:
+            prev_mains = previous_mains[corporation_ticker]
+            entry["growthRate"] = current_mains / prev_mains if prev_mains > 0 else 1
+
+        previous_mains[corporation_ticker] = current_mains
+
+    return jsonify(serialized_result)
 
 
 @app.route("/get_alliance_tickers", methods=["GET"])
@@ -600,6 +617,16 @@ def add_members():
     uniq_id = uuid.uuid4()
     newTask = MemberRefreshTask(run_id=uniq_id)
     threading.Thread(target=newTask.fill_members).start()
+
+    return jsonify({"task_id": uniq_id})
+
+
+@app.route("/corporations/refresh", methods=["GET"])
+@login_required
+@admin_required
+def refresh_corporations():
+    uniq_id = uuid.uuid4()
+    threading.Thread(target=update_corp).start()
 
     return jsonify({"task_id": uniq_id})
 
