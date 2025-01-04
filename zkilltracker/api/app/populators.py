@@ -63,6 +63,74 @@ def add_corp(corporation_id: int):
         return jsonify({"error": str(e)}), 500
 
 
+def update_corp():
+    try:
+        corporation_ids = db.session.query(Corporation.id).all()
+        corporation_ids = [cid[0] for cid in corporation_ids]
+
+        for corporation_id in corporation_ids:
+            time.sleep(7)
+            url = f"https://zkillboard.com/api/stats/corporationID/{corporation_id}/"
+            response = requests.get(url)
+            data = response.json()
+
+            info = data.get("info", {})
+            corporation_entry = (
+                db.session.query(Corporation)
+                .filter(Corporation.id == corporation_id)
+                .first()
+            )
+
+            if corporation_entry:
+                corporation_entry.allianceID = info.get("allianceID", 0)
+                corporation_entry.ceoID = info.get("ceoID", 0)
+                corporation_entry.dateFounded = info.get("date_founded", "")
+                corporation_entry.memberCount = info.get("memberCount", 0)
+                corporation_entry.name = info.get("name", "")
+                corporation_entry.taxRate = info.get("taxRate", 0)
+                corporation_entry.ticker = info.get("ticker", "")
+                corporation_entry.soloKills = data.get("soloKills", 0)
+                corporation_entry.soloLosses = data.get("soloLosses", 0)
+                corporation_entry.avgGangSize = data.get("avgGangSize", 0.0)
+                corporation_entry.iskLost = data.get("iskLost", 0)
+                corporation_entry.attackersLost = data.get("attackersLost", 0)
+                corporation_entry.shipsDestroyed = data.get("shipsDestroyed", 0)
+                corporation_entry.iskDestroyed = data.get("iskDestroyed", 0)
+                corporation_entry.attackersDestroyed = data.get("attackersDestroyed", 0)
+
+                db.session.merge(corporation_entry)
+
+            months_data = data.get("months", {})
+            for month, stats in months_data.items():
+                year = int(month[:4])
+                month = int(month[4:])
+                entry = Months(
+                    corporationID=corporation_id,
+                    year=year,
+                    month=month,
+                    shipsLost=stats.get("shipsLost", 0),
+                    pointsLost=stats.get("pointsLost", 0),
+                    iskLost=stats.get("iskLost", 0),
+                    shipsDestroyed=stats.get("shipsDestroyed", 0),
+                    pointsDestroyed=stats.get("pointsDestroyed", 0),
+                    iskDestroyed=stats.get("iskDestroyed", 0),
+                )
+                db.session.merge(entry)
+
+        db.session.commit()
+
+        return (
+            jsonify(
+                {"status": "success", "message": "Corporations updated successfully"}
+            ),
+            200,
+        )
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
 def fill_members():
     try:
         corporation_ids = db.session.query(Corporation.id).all()
