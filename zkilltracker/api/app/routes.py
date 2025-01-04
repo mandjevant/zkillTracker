@@ -46,11 +46,6 @@ import asyncio
 import uuid
 
 
-from flask import jsonify
-from sqlalchemy import func, and_
-from app.models import Members, MemberKills
-
-
 logging.basicConfig(level=logging.DEBUG)
 asyncio.run(start_websocket_listener())
 
