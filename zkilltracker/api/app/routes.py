@@ -216,9 +216,10 @@ def get_corporation_members(corporation_id: int):
 def get_corporation_deadbeats(corporation_id: int):
     try:
         now = datetime.datetime.utcnow()
-        six_months_ago = now - datetime.timedelta(days=180)  # Approximate 6 months
-        two_months_ago = now - datetime.timedelta(days=60)  # Approximate 2 months
+        six_months_ago = now - datetime.timedelta(days=180)
+        two_months_ago = now - datetime.timedelta(days=60)
 
+        # Subquery to find recent killers in the last 2 months
         recent_killers_subquery = (
             db.session.query(MemberKills.characterID)
             .join(Kills, Kills.killID == MemberKills.killID)
@@ -233,8 +234,9 @@ def get_corporation_deadbeats(corporation_id: int):
             .distinct()
         )
 
+        # Main query returning characterID and characterName
         deadbeats_query = (
-            db.session.query(Members.characterName)
+            db.session.query(Members.characterID, Members.characterName)
             .outerjoin(MemberKills, Members.characterID == MemberKills.characterID)
             .join(Kills, Kills.killID == MemberKills.killID)
             .filter(
@@ -246,8 +248,11 @@ def get_corporation_deadbeats(corporation_id: int):
             .all()
         )
 
-        deadbeat_names = [member.characterName for member in deadbeats_query]
-        return jsonify({"deadbeats": deadbeat_names}), 200
+        deadbeats_list = [
+            {"characterID": member.characterID, "characterName": member.characterName}
+            for member in deadbeats_query
+        ]
+        return jsonify({"deadbeats": deadbeats_list}), 200
 
     except Exception as e:
         print(f"Error: {e}")
