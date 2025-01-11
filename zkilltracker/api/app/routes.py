@@ -50,8 +50,8 @@ import os
 
 
 logging.basicConfig(level=logging.DEBUG)
-socketThread = threading.Thread(target=run_asyncio_in_thread)
-socketThread.start()
+# socketThread = threading.Thread(target=run_asyncio_in_thread)
+# socketThread.start()
 
 
 @app.route("/login", methods=["GET"])
@@ -215,35 +215,32 @@ def get_corporation_members(corporation_id: int):
 @login_required
 def get_corporation_deadbeats(corporation_id: int):
     try:
-        six_months_ago = datetime.datetime.utcnow() - datetime.timedelta(days=6 * 30)
-        two_months_ago = datetime.datetime.utcnow() - datetime.timedelta(days=2 * 30)
+        now = datetime.datetime.utcnow()
+        six_months_ago = now - datetime.timedelta(days=180)  # Approximate 6 months
+        two_months_ago = now - datetime.timedelta(days=60)  # Approximate 2 months
 
         recent_killers_subquery = (
             db.session.query(MemberKills.characterID)
             .join(Kills, Kills.killID == MemberKills.killID)
             .filter(
+                Kills.datetime >= two_months_ago,
                 MemberKills.characterID.in_(
                     db.session.query(Members.characterID).filter(
                         Members.corporationID == corporation_id
                     )
                 ),
-                Kills.datetime >= two_months_ago,
             )
             .distinct()
-        ).with_entities(MemberKills.characterID)
+        )
 
         deadbeats_query = (
             db.session.query(Members.characterName)
+            .outerjoin(MemberKills, Members.characterID == MemberKills.characterID)
+            .join(Kills, Kills.killID == MemberKills.killID)
             .filter(
                 Members.corporationID == corporation_id,
-                Members.characterID.notin_(recent_killers_subquery),
-                db.session.query(MemberKills)
-                .join(Kills, Kills.killID == MemberKills.killID)
-                .filter(
-                    MemberKills.characterID == Members.characterID,
-                    Kills.datetime >= six_months_ago,
-                )
-                .exists(),
+                ~Members.characterID.in_(recent_killers_subquery),
+                Kills.datetime >= six_months_ago,
             )
             .distinct()
             .all()
@@ -253,7 +250,7 @@ def get_corporation_deadbeats(corporation_id: int):
         return jsonify({"deadbeats": deadbeat_names}), 200
 
     except Exception as e:
-        print(e)
+        print(f"Error: {e}")
         return jsonify({"error": str(e)}), 500
 
 
