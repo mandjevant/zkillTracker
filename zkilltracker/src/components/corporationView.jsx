@@ -164,9 +164,10 @@ export default function CorporationView() {
     axios.get(`/corporation/${activeCorporationId.toString()}/deadbeats`)
       .then(res => {
         const deadbeats = res.data.deadbeats;
-        const rows = deadbeats.map((charName, index) => (
-          <Table.Tr key={index}>
-            <Table.Td>{charName}</Table.Td>
+        console.log(deadbeats)
+        const rows = deadbeats.map((char, index) => (
+          <Table.Tr key={index} onDoubleClick={() => window.open(`https://zkillboard.com/character/${char.characterID}/`, '_blank')}>
+            <Table.Td>{char.characterName}</Table.Td>
           </Table.Tr>
         ));
         setCorpDeadbeatsRows(rows)
@@ -299,7 +300,7 @@ export default function CorporationView() {
             </div>
             <div>
               <h5 className="tableTitle">
-                Possible deadbeats
+                Possible deadbeats (double click to zkill)
               </h5>
               <Table.ScrollContainer minWidth={"13vw"} className="corpTableLastMonth">
                 <Table horizontalSpacing="md">
