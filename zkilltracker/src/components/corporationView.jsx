@@ -80,7 +80,18 @@ export default function CorporationView() {
         })
         console.error("Error fetching this month's kills: ", error);
       })
+  }, [activeCorporationId])
+
+
+  useEffect(() => {
+    if (!activeCorporationId) {
+      return
+    }
     
+    setCorpLastMonthKillRows([]);
+    const curYear = new Date().getFullYear();
+    const curMonth = new Date().getMonth();
+
     let prevMonth, prevYear;
     if (curMonth === 0) {
       prevMonth = 11;
@@ -106,6 +117,25 @@ export default function CorporationView() {
         })
         console.error("Error fetching last month's kills: ", error);
       })
+  }, [activeCorporationId])
+
+  useEffect(() => {
+    if (!activeCorporationId) {
+      return
+    }
+    
+    setCorpLastMonthLowKillRows([]);
+    const curYear = new Date().getFullYear();
+    const curMonth = new Date().getMonth();
+
+    let prevMonth, prevYear;
+    if (curMonth === 0) {
+      prevMonth = 11;
+      prevYear = curYear-1;
+    } else {
+      prevMonth = curMonth-1;
+      prevYear = curYear;
+    }
 
     axios.get(`/corporation/${activeCorporationId.toString()}/low_kills/year/${prevYear}/month/${prevMonth+1}`)
       .then(res => {
@@ -123,10 +153,17 @@ export default function CorporationView() {
         })
         console.error("Error fetching last month's low kills: ", error);
       })
+  }, [activeCorporationId])
 
+  useEffect(() => {
+    if (!activeCorporationId) {
+      return
+    }
+    
+    setCorpDeadbeatsRows([]);
     axios.get(`/corporation/${activeCorporationId.toString()}/deadbeats`)
       .then(res => {
-        const deadbeats = res.data.deadbeats;  // Access the deadbeats array
+        const deadbeats = res.data.deadbeats;
         const rows = deadbeats.map((charName, index) => (
           <Table.Tr key={index}>
             <Table.Td>{charName}</Table.Td>
@@ -141,7 +178,6 @@ export default function CorporationView() {
         console.error("Error fetching possible deadbeats: ", error);
       })
   }, [activeCorporationId])
-
 
   return (
     <div className="App">
