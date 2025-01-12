@@ -219,7 +219,6 @@ def get_corporation_deadbeats(corporation_id: int):
         six_months_ago = now - datetime.timedelta(days=180)
         two_months_ago = now - datetime.timedelta(days=60)
 
-        # Subquery to find recent killers in the last 2 months
         recent_killers_subquery = (
             db.session.query(MemberKills.characterID)
             .join(Kills, Kills.killID == MemberKills.killID)
@@ -234,7 +233,6 @@ def get_corporation_deadbeats(corporation_id: int):
             .distinct()
         )
 
-        # Main query returning characterID and characterName
         deadbeats_query = (
             db.session.query(Members.characterID, Members.characterName)
             .outerjoin(MemberKills, Members.characterID == MemberKills.characterID)
@@ -756,4 +754,67 @@ def upload_file():
 
         return jsonify({"message": "CSV processed and data stored successfully"}), 200
     except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/corporation/<int:corporation_id>/snapshot", methods=["GET"])
+@login_required
+def get_kills_per_month(corporation_id: int):
+    try:
+        now = datetime.datetime.utcnow()
+        six_months_ago = now.replace(day=1, hour=0, minute=0, second=0) - relativedelta(
+            months=6
+        )
+        months_list = [
+            (now - datetime.timedelta(days=i * 30)).strftime("%Y-%m") for i in range(6)
+        ][::-1]
+
+        kills_query = (
+            db.session.query(
+                Members.characterID,
+                Members.characterName,
+                func.strftime("%Y-%m", Kills.datetime).label("month"),
+                func.count(Kills.killID).label("kill_count"),
+            )
+            .join(MemberKills, Members.characterID == MemberKills.characterID)
+            .join(Kills, Kills.killID == MemberKills.killID)
+            .filter(
+                Members.corporationID == corporation_id,
+                Kills.datetime >= six_months_ago,
+            )
+            .group_by(Members.characterID, Members.characterName, "month")
+            .all()
+        )
+
+        kills_data = {}
+        for characterID, characterName, month, kill_count in kills_query:
+            if characterID not in kills_data:
+                kills_data[characterID] = {
+                    "characterName": characterName,
+                    "kills": {month: 0 for month in months_list},
+                }
+            kills_data[characterID]["kills"][month] = kill_count
+
+        for member_data in kills_data.values():
+            for month in months_list:
+                member_data["kills"].setdefault(month, 0)
+            member_data["kills"] = [
+                member_data["kills"][month] for month in months_list
+            ]
+
+        result = [
+            {
+                "characterID": characterID,
+                "characterName": member_data["characterName"],
+                "kills": member_data["kills"],
+                "totalKills": sum(member_data["kills"]),
+            }
+            for characterID, member_data in kills_data.items()
+        ]
+        result.sort(key=lambda x: x["totalKills"], reverse=True)
+
+        return jsonify({"killsPerMonth": result}), 200
+
+    except Exception as e:
+        print(f"Error: {e}")
         return jsonify({"error": str(e)}), 500
