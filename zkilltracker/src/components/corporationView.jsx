@@ -210,7 +210,7 @@ export default function CorporationView() {
             {char.kills.map((kill, index) => (
               <Table.Td key={index} style={{textAlign: 'right'}}>{kill}</Table.Td>
             ))}
-            <Table.Td>{char.totalKills}</Table.Td>
+            <Table.Td style={{textAlign: 'right'}}>{char.totalKills}</Table.Td>
           </Table.Tr>
         ));
         setCorpSnapshotKillRows(rows)
