@@ -34,9 +34,11 @@ from app.helpers import (
     is_admin,
 )
 from app.taskmanager import KillRefreshTask, MemberRefreshTask
-from app.populators import add_corp, run_asyncio_in_thread, update_corp
+from app.populators import add_corp, update_corp
 from app.decorators import login_required, admin_required
 from flask_login import login_user, logout_user, current_user
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
 from dateutil.relativedelta import relativedelta
 from werkzeug.utils import secure_filename
 from sqlalchemy import func, extract
@@ -45,13 +47,27 @@ import threading
 import datetime
 import logging
 import sqlite3
+import atexit
 import uuid
 import os
 
 
 logging.basicConfig(level=logging.DEBUG)
-# socketThread = threading.Thread(target=run_asyncio_in_thread)
-# socketThread.start()
+
+
+scheduler = BackgroundScheduler()
+kill_trigger = CronTrigger(
+    year="*", month="*", day="*", hour="6", minute="0", second="0"
+)
+scheduler.add_job(KillRefreshTask(uuid.uuid4).get_kills, kill_trigger)
+corp_trigger = CronTrigger(
+    year="*", month="*", day="*", hour="9", minute="30", second="0"
+)
+scheduler.add_job(update_corp, corp_trigger)
+scheduler.start()
+
+
+atexit.register(lambda: scheduler.shutdown())
 
 
 @app.route("/login", methods=["GET"])
