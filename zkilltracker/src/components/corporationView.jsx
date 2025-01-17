@@ -5,7 +5,7 @@ import { Select, Table, Tabs, Tooltip } from '@mantine/core';
 import { LineChart } from "@mantine/charts";
 import { showNotification } from '@mantine/notifications';
 import { negaNotifProps } from './helpers';
-import { IconListTree, IconCalendarMonth } from '@tabler/icons-react';
+import { IconListTree, IconCalendarMonth, IconPhotoScan } from '@tabler/icons-react';
 
 export default function CorporationView() {
   const [activeCorporationId, setActiveCorporationId] = useState(98753041);
@@ -16,7 +16,23 @@ export default function CorporationView() {
   const [corpMonthKillRows, setCorpMonthKillRows] = useState([]);
   const [corpLastMonthKillRows, setCorpLastMonthKillRows] = useState([]);
   const [corpLastMonthLowKillRows, setCorpLastMonthLowKillRows] = useState([]);
+  const [corpSnapshotKillRows, setCorpSnapshotKillRows] = useState([]);
   const [corpDeadbeatsRows, setCorpDeadbeatsRows] = useState([]);
+  const lastSixMonths = getLastSixMonths();
+
+  function getLastSixMonths() {
+    const months = [];
+    const today = new Date();
+    
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      months.push(`${year}-${month}`);
+    }
+    
+    return months;
+  }
 
   useEffect(() => {
     axios.get("/corporations")
@@ -80,7 +96,18 @@ export default function CorporationView() {
         })
         console.error("Error fetching this month's kills: ", error);
       })
+  }, [activeCorporationId])
+
+
+  useEffect(() => {
+    if (!activeCorporationId) {
+      return
+    }
     
+    setCorpLastMonthKillRows([]);
+    const curYear = new Date().getFullYear();
+    const curMonth = new Date().getMonth();
+
     let prevMonth, prevYear;
     if (curMonth === 0) {
       prevMonth = 11;
@@ -106,6 +133,25 @@ export default function CorporationView() {
         })
         console.error("Error fetching last month's kills: ", error);
       })
+  }, [activeCorporationId])
+
+  useEffect(() => {
+    if (!activeCorporationId) {
+      return
+    }
+    
+    setCorpLastMonthLowKillRows([]);
+    const curYear = new Date().getFullYear();
+    const curMonth = new Date().getMonth();
+
+    let prevMonth, prevYear;
+    if (curMonth === 0) {
+      prevMonth = 11;
+      prevYear = curYear-1;
+    } else {
+      prevMonth = curMonth-1;
+      prevYear = curYear;
+    }
 
     axios.get(`/corporation/${activeCorporationId.toString()}/low_kills/year/${prevYear}/month/${prevMonth+1}`)
       .then(res => {
@@ -123,13 +169,20 @@ export default function CorporationView() {
         })
         console.error("Error fetching last month's low kills: ", error);
       })
+  }, [activeCorporationId])
 
+  useEffect(() => {
+    if (!activeCorporationId) {
+      return
+    }
+    
+    setCorpDeadbeatsRows([]);
     axios.get(`/corporation/${activeCorporationId.toString()}/deadbeats`)
       .then(res => {
-        const deadbeats = res.data.deadbeats;  // Access the deadbeats array
-        const rows = deadbeats.map((charName, index) => (
-          <Table.Tr key={index}>
-            <Table.Td>{charName}</Table.Td>
+        const deadbeats = res.data.deadbeats;
+        const rows = deadbeats.map((char, index) => (
+          <Table.Tr key={index} onDoubleClick={() => window.open(`https://zkillboard.com/character/${char.characterID}/`, '_blank')}>
+            <Table.Td>{char.characterName}</Table.Td>
           </Table.Tr>
         ));
         setCorpDeadbeatsRows(rows)
@@ -142,6 +195,33 @@ export default function CorporationView() {
       })
   }, [activeCorporationId])
 
+  useEffect(() => {
+    if (!activeCorporationId) {
+      return
+    }
+    
+    setCorpSnapshotKillRows([]);
+    axios.get(`/corporation/${activeCorporationId.toString()}/snapshot`)
+      .then(res => {
+        const killsPerMonth = res.data.killsPerMonth;
+        const rows = killsPerMonth.map((char, index) => (
+          <Table.Tr key={index} onDoubleClick={() => window.open(`https://zkillboard.com/character/${char.characterID}/`, '_blank')}>
+            <Table.Td>{char.characterName}</Table.Td>
+            {char.kills.map((kill, index) => (
+              <Table.Td key={index} style={{textAlign: 'right'}}>{kill}</Table.Td>
+            ))}
+            <Table.Td style={{textAlign: 'right'}}>{char.totalKills}</Table.Td>
+          </Table.Tr>
+        ));
+        setCorpSnapshotKillRows(rows)
+      }).catch(error => {
+        showNotification({
+          message: "Error fetching snapshot",
+          ...negaNotifProps
+        })
+        console.error("Error fetching snapshot: ", error);
+      })
+  }, [activeCorporationId])
 
   return (
     <div className="App">
@@ -178,6 +258,16 @@ export default function CorporationView() {
           >
             <Tabs.Tab value="lastMonth" leftSection={<IconCalendarMonth />}>
               Last month
+            </Tabs.Tab>
+          </Tooltip>
+          <Tooltip
+            multiline
+            w={"13vw"}
+            transitionProps={{ duration: 150 }}
+            label="An overview of member activity in the past six months."
+          >
+            <Tabs.Tab value="snapshot" leftSection={<IconPhotoScan />}>
+              Snapshot
             </Tabs.Tab>
           </Tooltip>
         </Tabs.List>
@@ -263,7 +353,7 @@ export default function CorporationView() {
             </div>
             <div>
               <h5 className="tableTitle">
-                Possible deadbeats
+                Possible deadbeats (double click to zkill)
               </h5>
               <Table.ScrollContainer minWidth={"13vw"} className="corpTableLastMonth">
                 <Table horizontalSpacing="md">
@@ -277,6 +367,29 @@ export default function CorporationView() {
               </Table.ScrollContainer>
             </div>
           </div>          
+        </Tabs.Panel>
+        <Tabs.Panel value="snapshot">
+        <div className="corpSnapshotFocus">
+            <div>
+              <h5 className="tableTitle">
+                Kills per member, past six months
+              </h5>
+              <Table.ScrollContainer minWidth={"13vw"} className="corpTableSnapshot">
+                <Table horizontalSpacing="md">
+                  <Table.Thead>
+                    <Table.Tr>
+                      <Table.Th>Character</Table.Th>
+                      {lastSixMonths.map((month, index) => (
+                        <Table.Th key={index} style={{textAlign: 'right'}}>{month}</Table.Th>
+                      ))}
+                      <Table.Th style={{textAlign: 'right'}}>Total</Table.Th>
+                    </Table.Tr>
+                  </Table.Thead>
+                  <Table.Tbody>{corpSnapshotKillRows}</Table.Tbody>
+                </Table>
+              </Table.ScrollContainer>
+            </div>
+          </div>
         </Tabs.Panel>
       </Tabs>
     </div>
