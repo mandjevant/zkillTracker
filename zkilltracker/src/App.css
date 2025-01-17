@@ -281,7 +281,9 @@
 }
 
 .table {
-  margin-top: 3vh;
+  margin-top: 2vh;
+  overflow: auto;
+  height: 70vh;
 }
 
 .tableTitle {
@@ -333,8 +335,23 @@
   display: flex;
   justify-content: space-around;
   width: 80vw;
+  overflow: auto;
+  height: 80vh;
+  height: 71vh;
 }
 
 .refreshButton {
   max-width: 15vw;
+}
+
+.corpSnapshotFocus {
+  display: flex;
+  justify-content: space-around;
+  width: 80vw;
+  overflow: auto;
+  height: 71vh;
+}
+
+.corpTableSnapshot {
+  margin-top: 1vh;
 }
