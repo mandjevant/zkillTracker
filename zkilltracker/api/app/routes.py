@@ -753,8 +753,8 @@ def upload_file():
     if file.filename == "":
         return jsonify({"error": "No selected file"}), 400
 
-    if not file.filename.endswith(".csv"):
-        return jsonify({"error": "File must be a CSV"}), 400
+    if not file.filename.endswith(".xlsx"):
+        return jsonify({"error": "File must be .xlsx"}), 400
 
     try:
         file_path = os.path.join(

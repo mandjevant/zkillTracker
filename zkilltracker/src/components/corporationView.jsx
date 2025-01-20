@@ -303,7 +303,7 @@ export default function CorporationView() {
                   Top killers this month
                 </h5>
                 <Table.ScrollContainer minWidth={"13vw"} className="corpTable">
-                  <Table horizontalSpacing="md">
+                  <Table stickyHeader horizontalSpacing="md">
                     <Table.Thead>
                       <Table.Tr>
                         <Table.Th>Character</Table.Th>
@@ -323,48 +323,42 @@ export default function CorporationView() {
               <h5 className="tableTitle">
                 Top killers past month
               </h5>
-              <Table.ScrollContainer minWidth={"13vw"} className="corpTableLastMonth">
-                <Table horizontalSpacing="md">
-                  <Table.Thead>
-                    <Table.Tr>
-                      <Table.Th>Character</Table.Th>
-                      <Table.Th style={{textAlign: 'right'}}>Kills</Table.Th>
-                    </Table.Tr>
-                  </Table.Thead>
-                  <Table.Tbody>{corpLastMonthKillRows}</Table.Tbody>
-                </Table>
-              </Table.ScrollContainer>
+              <Table stickyHeader horizontalSpacing="md" minWidth={"13vw"} className="corpTableLastMonth">
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th>Character</Table.Th>
+                    <Table.Th style={{textAlign: 'right'}}>Kills</Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>{corpLastMonthKillRows}</Table.Tbody>
+              </Table>
             </div>
             <div>
               <h5 className="tableTitle">
                 Characters who did not get 10+ kills past month
               </h5>
-              <Table.ScrollContainer minWidth={"13vw"} className="corpTableLastMonth">
-                <Table horizontalSpacing="md">
-                  <Table.Thead>
-                    <Table.Tr>
-                      <Table.Th>Character</Table.Th>
-                      <Table.Th style={{textAlign: 'right'}}>Kills</Table.Th>
-                    </Table.Tr>
-                  </Table.Thead>
-                  <Table.Tbody>{corpLastMonthLowKillRows}</Table.Tbody>
-                </Table>
-              </Table.ScrollContainer>
+              <Table stickyHeader horizontalSpacing="md" minWidth={"13vw"} className="corpTableLastMonth">
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th>Character</Table.Th>
+                    <Table.Th style={{textAlign: 'right'}}>Kills</Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>{corpLastMonthLowKillRows}</Table.Tbody>
+              </Table>
             </div>
             <div>
               <h5 className="tableTitle">
                 Possible deadbeats (double click to zkill)
               </h5>
-              <Table.ScrollContainer minWidth={"13vw"} className="corpTableLastMonth">
-                <Table horizontalSpacing="md">
-                  <Table.Thead>
-                    <Table.Tr>
-                      <Table.Th>Character</Table.Th>
-                    </Table.Tr>
-                  </Table.Thead>
-                  <Table.Tbody>{corpDeadbeatsRows}</Table.Tbody>
-                </Table>
-              </Table.ScrollContainer>
+              <Table stickyHeader horizontalSpacing="md" minWidth={"13vw"} className="corpTableLastMonth">
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th>Character</Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>{corpDeadbeatsRows}</Table.Tbody>
+              </Table>
             </div>
           </div>          
         </Tabs.Panel>
@@ -374,20 +368,18 @@ export default function CorporationView() {
               <h5 className="tableTitle">
                 Kills per member, past six months
               </h5>
-              <Table.ScrollContainer minWidth={"13vw"} className="corpTableSnapshot">
-                <Table horizontalSpacing="md">
-                  <Table.Thead>
-                    <Table.Tr>
-                      <Table.Th>Character</Table.Th>
-                      {lastSixMonths.map((month, index) => (
-                        <Table.Th key={index} style={{textAlign: 'right'}}>{month}</Table.Th>
-                      ))}
-                      <Table.Th style={{textAlign: 'right'}}>Total</Table.Th>
-                    </Table.Tr>
-                  </Table.Thead>
-                  <Table.Tbody>{corpSnapshotKillRows}</Table.Tbody>
-                </Table>
-              </Table.ScrollContainer>
+              <Table stickyHeader horizontalSpacing="md" minWidth={"13vw"} className="corpTableSnapshot">
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th>Character</Table.Th>
+                    {lastSixMonths.map((month, index) => (
+                      <Table.Th key={index} style={{textAlign: 'right'}}>{month}</Table.Th>
+                    ))}
+                    <Table.Th style={{textAlign: 'right'}}>Total</Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>{corpSnapshotKillRows}</Table.Tbody>
+              </Table>
             </div>
           </div>
         </Tabs.Panel>

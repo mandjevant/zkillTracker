@@ -258,21 +258,19 @@ export default function MemberView() {
                 <h5 className="tableTitle">
                   Detailed kills this month. Double click for zkill link
                 </h5>
-                <Table.ScrollContainer minWidth={500}>
-                  <Table>
-                    <Table.Thead>
-                      <Table.Tr>
-                        <Table.Th>Killed ship</Table.Th>
-                        <Table.Th>Damage done</Table.Th>
-                        <Table.Th>Final blow</Table.Th>
-                        <Table.Th>Attacker ship</Table.Th>
-                        <Table.Th>Solo</Table.Th>
-                        <Table.Th>Zkill link</Table.Th>
-                      </Table.Tr>
-                    </Table.Thead>
-                    <Table.Tbody>{focusedCurMonthKillsRows}</Table.Tbody>
-                  </Table>
-                </Table.ScrollContainer>
+                <Table stickyHeader minWidth={500}>
+                  <Table.Thead>
+                    <Table.Tr>
+                      <Table.Th>Killed ship</Table.Th>
+                      <Table.Th>Damage done</Table.Th>
+                      <Table.Th>Final blow</Table.Th>
+                      <Table.Th>Attacker ship</Table.Th>
+                      <Table.Th>Solo</Table.Th>
+                      <Table.Th>Zkill link</Table.Th>
+                    </Table.Tr>
+                  </Table.Thead>
+                  <Table.Tbody>{focusedCurMonthKillsRows}</Table.Tbody>
+                </Table>
               </div>
             </Tabs.Panel>
           </Tabs>
