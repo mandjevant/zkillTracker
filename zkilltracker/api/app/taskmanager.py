@@ -122,7 +122,12 @@ class MemberRefreshTask:
 
             corporation_ids = db.session.query(Corporation.id).all()
             for corp_id in corporation_ids:
-                self.fill_members_corp(corporation_id=corp_id[0])
+                try:
+                    time.sleep(2)
+                    self.fill_members_corp(corporation_id=corp_id[0])
+                except Exception as e:
+                    print("Error")
+                    print(e)
 
             self.status = "Done"
 

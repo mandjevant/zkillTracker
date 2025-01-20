@@ -73,7 +73,7 @@ export default function AddDataOverlay() {
 
   async function handleChangeCorporationAlliance() {
     try {
-      await axios.post(`/corporation/${ccaCorporationId}/change_alliance/${ccaNewAllianceId}`);
+      await axios.put(`/corporation/${ccaCorporationId}/change_alliance/${ccaNewAllianceId}`);
       showNotification({
         message: "Corporation alliance changed successfully!",
         ...posiNotifProps
@@ -211,7 +211,7 @@ export default function AddDataOverlay() {
     })
     .then(response => {
       showNotification({
-        message: "CSV file uploaded successfully!",
+        message: ".XLSX file uploaded successfully!",
         ...posiNotifProps
       });
     })
