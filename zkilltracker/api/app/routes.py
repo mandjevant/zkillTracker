@@ -60,10 +60,18 @@ kill_trigger = CronTrigger(
     year="*", month="*", day="*", hour="6", minute="0", second="0"
 )
 scheduler.add_job(KillRefreshTask(uuid.uuid4).get_kills, kill_trigger)
+kill_trigger_two = CronTrigger(
+    year="*", month="*", day="*", hour="18", minute="0", second="0"
+)
+scheduler.add_job(KillRefreshTask(uuid.uuid4).get_kills, kill_trigger_two)
 corp_trigger = CronTrigger(
     year="*", month="*", day="*", hour="9", minute="30", second="0"
 )
 scheduler.add_job(update_corp, corp_trigger)
+corp_trigger_two = CronTrigger(
+    year="*", month="*", day="*", hour="21", minute="30", second="0"
+)
+scheduler.add_job(update_corp, corp_trigger_two)
 scheduler.start()
 
 
