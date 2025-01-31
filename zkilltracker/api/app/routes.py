@@ -96,9 +96,9 @@ def oauth_callback():
 
         if user:
             login_user(user)
-            return redirect("http://localhost:3000/corporation"), 200
+            return redirect("https://zkilltracker.mostlycapstable.com/corporation"), 200
 
-    return redirect("http://localhost:3000/"), 200
+    return redirect("https://zkilltracker.mostlycapstable.com/corporation"), 200
 
 
 @app.route("/login_status")
@@ -790,8 +790,8 @@ def get_kills_per_month(corporation_id: int):
             months=6
         )
         months_list = [
-            (now - datetime.timedelta(days=i * 30)).strftime("%Y-%m") for i in range(6)
-        ][::-1]
+            (now - relativedelta(months=i)).strftime("%Y-%m") for i in range(6, 0, -1)
+        ]
 
         kills_query = (
             db.session.query(

@@ -14,6 +14,7 @@ import '@mantine/charts/styles.css';
 import axios from 'axios';
 import LogOut from './components/logoutButton';
 import { negaNotifProps, posiNotifProps } from './components/helpers';
+import { urls } from './config'
 
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext)
@@ -24,12 +25,17 @@ export default function App() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loggedInCharName, setLoggedInCharName] = useState("");
   const navigate = useNavigate();
+  const axiosInstance = axios.create({
+    baseURL: urls.baseApiUrl,
+    withCredentials: true,
+  })
+  const pageUrl = urls.websiteUrl
 
   useEffect(() => {
-    const currentRoute = window.location.href;
+    const currentRoute = window.location.href; 
 
     if (currentRoute.substr(currentRoute.length - 1) === "/") {
-      axios.get("login_status")
+      axiosInstance.get("/login_status")
         .then((response) => {
           const data = response.data;
           setIsLoggedIn(data.isLoggedIn);
@@ -56,18 +62,18 @@ export default function App() {
           console.error("There was an error fetching the login status:", error);
         });
       }
-    }, [navigate]);
+    }, [navigate, axiosInstance]);
 
   useEffect(() => {
     if (!isLoggedIn) {
       navigate("/");
     }
-  }, [isLoggedIn, navigate]);
+  }, [isLoggedIn, navigate, pageUrl]);
 
   return (
     <MantineProvider defaultColorScheme="dark">
       <Notifications limit={5} zIndex={1000} />
-      <AuthContext.Provider value={{ isLoggedIn, isAdmin, loggedInCharName, setIsLoggedIn, setIsAdmin, setLoggedInCharName }}>
+      <AuthContext.Provider value={{ isLoggedIn, isAdmin, loggedInCharName, setIsLoggedIn, setIsAdmin, setLoggedInCharName, axiosInstance, pageUrl }}>
         {isLoggedIn ? (
           isAdmin ? (
             <Routes>

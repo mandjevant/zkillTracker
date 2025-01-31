@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS
 from os import environ
 import flask_login
 import uuid
@@ -8,6 +9,7 @@ import os
 
 db = SQLAlchemy()
 app = Flask(__name__)
+CORS(app, supports_credentials=True)
 db_name = "zkillboard_stats.db"
 app.secret_key = str(uuid.uuid4())
 login_manager = flask_login.LoginManager()
