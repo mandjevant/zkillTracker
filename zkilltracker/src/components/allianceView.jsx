@@ -6,12 +6,12 @@
 
 import React, { useState, useEffect } from 'react';
 import Menu from './menu';
-import axios from 'axios';
 import { MultiSelect, Select, Box, Text } from '@mantine/core';
 import { MonthPickerInput } from '@mantine/dates';
 import { LineChart } from '@mantine/charts';
 import { negaNotifProps } from './helpers';
 import { showNotification } from '@mantine/notifications';
+import { useAuth } from '../App';
 
 
 export default function AllianceView() {
@@ -37,6 +37,7 @@ export default function AllianceView() {
   const [selectedCorporations, setSelectedCorporations] = useState(["MCAP"])
   const [displayOption, setDisplayOption] = useState("killsPerActiveMain")
   const [allianceChartData, setAllianceChartData] = useState([])
+  const { axiosInstance } = useAuth();
 
   useEffect(() => {
     if (!monthRange[0] | !monthRange[1]) {
@@ -50,7 +51,7 @@ export default function AllianceView() {
       end_month: monthRange[1].getMonth(),
     });
 
-    axios.get(`/get_alliance_tickers?${params.toString()}`)
+    axiosInstance.get(`/get_alliance_tickers?${params.toString()}`)
       .then(res => {
         const corpTickers = res.data.map(i => i.corporationTicker).sort()
         const uniqCorpTickers = [...new Set(corpTickers)]
@@ -72,7 +73,7 @@ export default function AllianceView() {
         })
         console.error("Error fetching alliance tickers: ", error);
       });
-  }, [monthRange]);
+  }, [monthRange, axiosInstance]);
 
   useEffect(() => {
     if (!monthRange[0] | !monthRange[1] | !selectedCorporations) {
@@ -88,7 +89,7 @@ export default function AllianceView() {
 
     selectedCorporations.forEach(corp => params.append('corporations', corp));
 
-    axios.get(`/get_alliance_data?${params.toString()}`)
+    axiosInstance.get(`/get_alliance_data?${params.toString()}`)
       .then(res => {
         const allianceWithMonthYearConcat = res.data.map(entry => {
           return {
@@ -140,7 +141,7 @@ export default function AllianceView() {
         })
         console.error("Error fetching alliance data: ", error);
       });
-  }, [monthRange, selectedCorporations, displayOption])
+  }, [monthRange, selectedCorporations, displayOption, axiosInstance])
 
 
   function ChartLegend() {

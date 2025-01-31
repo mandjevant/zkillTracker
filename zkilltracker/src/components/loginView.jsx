@@ -1,18 +1,17 @@
 import React from 'react';
-import axios from 'axios';
 import { cleanNotifications, showNotification } from '@mantine/notifications';
 import { negaNotifProps } from './helpers';
 import { useAuth } from '../App';
 
 export default function LoginView() {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, axiosInstance, pageUrl } = useAuth();
 
   if (isLoggedIn) {
-    window.location.replace("http://localhost:3000/corporation")
+    window.location.replace(pageUrl + "/corporation")
   }
 
   const handleLogin = () => {
-    axios.get("/login")
+    axiosInstance.get("/login")
       .then(response => {
         const authURL = response.data;
 

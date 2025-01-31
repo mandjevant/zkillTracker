@@ -1,4 +1,3 @@
-import axios from "axios";
 import { negaNotifProps } from './helpers';
 import { Button } from "@mantine/core";
 import { useAuth } from "../App";
@@ -7,11 +6,11 @@ import { useNavigate } from "react-router-dom";
 
 
 export default function LogOut() {
-  const { loggedInCharName, setIsLoggedIn, setIsAdmin, setLoggedInCharName } = useAuth();
+  const { loggedInCharName, setIsLoggedIn, setIsAdmin, setLoggedInCharName, axiosInstance } = useAuth();
   const navigate = useNavigate();
 
   function handleLogOut() {
-    axios.get("/logout")
+    axiosInstance.get("/logout")
       .then(response => {
         setIsLoggedIn(response.data.isLoggedIn);
         setIsAdmin(response.data.isAdmin);

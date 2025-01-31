@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import Menu from './menu';
-import axios from 'axios';
 import { Select, Table, Tabs, Tooltip } from '@mantine/core';
 import { LineChart } from "@mantine/charts";
 import { showNotification } from '@mantine/notifications';
 import { negaNotifProps } from './helpers';
 import { IconListTree, IconCalendarMonth, IconPhotoScan } from '@tabler/icons-react';
+import { useAuth } from '../App';
 
 export default function CorporationView() {
   const [activeCorporationId, setActiveCorporationId] = useState(98753041);
@@ -19,6 +19,7 @@ export default function CorporationView() {
   const [corpSnapshotKillRows, setCorpSnapshotKillRows] = useState([]);
   const [corpDeadbeatsRows, setCorpDeadbeatsRows] = useState([]);
   const lastSixMonths = getLastSixMonths();
+  const { axiosInstance } = useAuth()
 
   function getLastSixMonths() {
     const months = [];
@@ -35,7 +36,7 @@ export default function CorporationView() {
   }
 
   useEffect(() => {
-    axios.get("/corporations")
+    axiosInstance.get("/corporations")
       .then(res => {
         setAllCorporations(res.data);
       })
@@ -46,13 +47,13 @@ export default function CorporationView() {
         })
         console.error("Error fetching corporations: ", error);
       });
-  }, []);
+  }, [axiosInstance]);
 
   useEffect(() => {
     if (!activeCorporationId) {
       return
     }
-    axios.get(`/corporation/${activeCorporationId.toString()}/months`)
+    axiosInstance.get(`/corporation/${activeCorporationId.toString()}/months`)
       .then(res => {
         const corporationsWithMonthYearConcat = res.data.map(corp => {
           return {
@@ -69,7 +70,7 @@ export default function CorporationView() {
         })
         console.error("Error fetching corporation: ", error);
       })
-  }, [activeCorporationId])
+  }, [activeCorporationId, axiosInstance])
 
   useEffect(() => {
     if (!activeCorporationId) {
@@ -80,7 +81,7 @@ export default function CorporationView() {
     const curYear = new Date().getFullYear();
     const curMonth = new Date().getMonth();
 
-    axios.get(`/corporation/${activeCorporationId.toString()}/kills/year/${curYear}/month/${curMonth+1}`)
+    axiosInstance.get(`/corporation/${activeCorporationId.toString()}/kills/year/${curYear}/month/${curMonth+1}`)
       .then(res => {
         const rows = res.data.map((kill, index) => (
           <Table.Tr key={index}>
@@ -96,7 +97,7 @@ export default function CorporationView() {
         })
         console.error("Error fetching this month's kills: ", error);
       })
-  }, [activeCorporationId])
+  }, [activeCorporationId, axiosInstance])
 
 
   useEffect(() => {
@@ -117,7 +118,7 @@ export default function CorporationView() {
       prevYear = curYear;
     }
     
-    axios.get(`/corporation/${activeCorporationId.toString()}/kills/year/${prevYear}/month/${prevMonth+1}`)
+    axiosInstance.get(`/corporation/${activeCorporationId.toString()}/kills/year/${prevYear}/month/${prevMonth+1}`)
       .then(res => {
         const rows = res.data.map((kill, index) => (
           <Table.Tr key={index}>
@@ -133,7 +134,7 @@ export default function CorporationView() {
         })
         console.error("Error fetching last month's kills: ", error);
       })
-  }, [activeCorporationId])
+  }, [activeCorporationId, axiosInstance])
 
   useEffect(() => {
     if (!activeCorporationId) {
@@ -153,7 +154,7 @@ export default function CorporationView() {
       prevYear = curYear;
     }
 
-    axios.get(`/corporation/${activeCorporationId.toString()}/low_kills/year/${prevYear}/month/${prevMonth+1}`)
+    axiosInstance.get(`/corporation/${activeCorporationId.toString()}/low_kills/year/${prevYear}/month/${prevMonth+1}`)
       .then(res => {
         const rows = res.data.map((kill, index) => (
           <Table.Tr key={index}>
@@ -169,7 +170,7 @@ export default function CorporationView() {
         })
         console.error("Error fetching last month's low kills: ", error);
       })
-  }, [activeCorporationId])
+  }, [activeCorporationId, axiosInstance])
 
   useEffect(() => {
     if (!activeCorporationId) {
@@ -177,7 +178,7 @@ export default function CorporationView() {
     }
     
     setCorpDeadbeatsRows([]);
-    axios.get(`/corporation/${activeCorporationId.toString()}/deadbeats`)
+    axiosInstance.get(`/corporation/${activeCorporationId.toString()}/deadbeats`)
       .then(res => {
         const deadbeats = res.data.deadbeats;
         const rows = deadbeats.map((char, index) => (
@@ -193,7 +194,7 @@ export default function CorporationView() {
         })
         console.error("Error fetching possible deadbeats: ", error);
       })
-  }, [activeCorporationId])
+  }, [activeCorporationId, axiosInstance])
 
   useEffect(() => {
     if (!activeCorporationId) {
@@ -201,7 +202,7 @@ export default function CorporationView() {
     }
     
     setCorpSnapshotKillRows([]);
-    axios.get(`/corporation/${activeCorporationId.toString()}/snapshot`)
+    axiosInstance.get(`/corporation/${activeCorporationId.toString()}/snapshot`)
       .then(res => {
         const killsPerMonth = res.data.killsPerMonth;
         const rows = killsPerMonth.map((char, index) => (
@@ -221,7 +222,7 @@ export default function CorporationView() {
         })
         console.error("Error fetching snapshot: ", error);
       })
-  }, [activeCorporationId])
+  }, [activeCorporationId, axiosInstance])
 
   return (
     <div className="App">

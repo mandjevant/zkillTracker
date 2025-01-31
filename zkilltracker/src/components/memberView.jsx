@@ -2,10 +2,10 @@ import { useState, useEffect, useCallback } from 'react'
 import Menu from './menu';
 import { IconCalendarMonth, IconInfinity } from '@tabler/icons-react';
 import { Tabs, Select, Paper, Table, Button, NumberFormatter, Tooltip } from '@mantine/core';
-import axios from 'axios';
 import { negaNotifProps } from './helpers';
 import { showNotification } from '@mantine/notifications';
 import { LineChart } from '@mantine/charts';
+import { useAuth } from '../App'
 
 
 export default function MemberView() {
@@ -24,9 +24,10 @@ export default function MemberView() {
   const displayOptions = ["killCount", "totalValue", "solo", "awox", "npc", "points"]
   const formatFinancial = (value) => `$${Math.round(value).toLocaleString()}`;
   const formatInteger = (value) => Math.round(value).toLocaleString();
+  const { axiosInstance } = useAuth()
 
   useEffect(() => {
-    axios.get("/corporations")
+    axiosInstance.get("/corporations")
       .then(res => {
         const mappedCorps = res.data.map(corp => ({
           value: corp.id.toString(),
@@ -38,14 +39,14 @@ export default function MemberView() {
         console.error("Error fetching corporations: ", error);
       });
     
-    axios.get("/items")
+      axiosInstance.get("/items")
       .then(res => {
         setAllItems(res.data)
       })
       .catch(error => {
         console.error("Error fetching items: ", error);
       });
-  }, []);
+  }, [axiosInstance]);
 
   const getCharacterName = useCallback((characterID) => {
     const member = allMembers.find(
@@ -58,7 +59,7 @@ export default function MemberView() {
     if (!focusedCorporation) {
       return
     }
-    axios.get(`/corporation/${parseInt(focusedCorporation)}/members`)
+    axiosInstance.get(`/corporation/${parseInt(focusedCorporation)}/members`)
       .then(res => {
         const mappedMembers = res.data.map(char => ({
           value: char.characterID.toString(),
@@ -76,13 +77,13 @@ export default function MemberView() {
           console.error("Error fetching members: ", error);
         }
       });
-  }, [focusedCorporation]);
+  }, [focusedCorporation, axiosInstance]);
 
   useEffect(() => {
     if (!focusedMember) {
       return
     }
-    axios.get(`/member/${focusedMember}/monthlyaggregations`)
+    axiosInstance.get(`/member/${focusedMember}/monthlyaggregations`)
       .then(res => {
         setMonthlyAggKillData(res.data);
 
@@ -99,14 +100,14 @@ export default function MemberView() {
           console.error("Error fetching member data: ", error);
         }
       });
-  }, [focusedMember, allMembers, getCharacterName]);
+  }, [focusedMember, allMembers, getCharacterName, axiosInstance]);
 
   useEffect(() => {
     if (!focusedMember) {
       return
     }
     setFocusedAllKills(0)
-    axios.get(`/member/${focusedMember}/kills/all`)
+    axiosInstance.get(`/member/${focusedMember}/kills/all`)
       .then(res => {
         setFocusedAllKills(res.data.length);
       })
@@ -120,7 +121,7 @@ export default function MemberView() {
           console.error("Error fetching member data: ", error);
         }
       });
-  }, [focusedMember])
+  }, [focusedMember, axiosInstance])
 
   const getItemName = useCallback((typeId) => {
     const item = allItems.find(item => item.type_id === typeId);
@@ -141,7 +142,7 @@ export default function MemberView() {
     setFocusedCurMonthAllKills(0);
     setFocusedPrevMonthAllKills(0);
 
-    axios.get(`/member/${focusedMember}/kills/year/${curYear}/month/${curMonth+1}`)
+    axiosInstance.get(`/member/${focusedMember}/kills/year/${curYear}/month/${curMonth+1}`)
       .then(res => {
         setFocusedCurMonthAllKills(res.data.length);
 
@@ -170,7 +171,7 @@ export default function MemberView() {
         }
       });
 
-    axios.get(`/member/${focusedMember}/kills/year/${prevYear}/month/${prevMonth+1}`)
+    axiosInstance.get(`/member/${focusedMember}/kills/year/${prevYear}/month/${prevMonth+1}`)
       .then(res => {
         setFocusedPrevMonthAllKills(res.data.length);
       })
@@ -184,7 +185,7 @@ export default function MemberView() {
           console.error("Error fetching kills previous month: ", error);
         }
       });
-  }, [focusedMember, getItemName])
+  }, [focusedMember, getItemName, axiosInstance])
 
   return (
     <div className="App">

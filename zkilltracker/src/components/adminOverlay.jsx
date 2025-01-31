@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { TextInput, NumberInput, Modal, Button, Switch, Tabs, FileInput } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
 import { posiNotifProps, negaNotifProps } from './helpers';
-import axios from 'axios';
+import { useAuth } from '../App';
 
 
 export default function AddDataOverlay() {
@@ -22,6 +22,7 @@ export default function AddDataOverlay() {
   const [ccaCorporationId, setCcaCorporationId] = useState('');
   const [ccaNewAllianceId, setCcaNewAllianceId] = useState('');
   const [file, setFile] = useState(null);
+  const { axiosInstance } = useAuth();
 
   useEffect(() => {
     let timer;
@@ -43,7 +44,7 @@ export default function AddDataOverlay() {
 
   async function handleAddCorporation() {
     try {
-      await axios.post(`/corporation/add/${acCorporationId}`);
+      await axiosInstance.post(`/corporation/add/${acCorporationId}`);
       showNotification({
         message: "Corporation added successfully!",
         ...posiNotifProps
@@ -58,7 +59,7 @@ export default function AddDataOverlay() {
 
   async function handleChangeMemberCorporation() {
     try {
-      await axios.post(`/member/${cmcCharacterId}/change_corporation/${cmcNewCorporationId}`);
+      await axiosInstance.post(`/member/${cmcCharacterId}/change_corporation/${cmcNewCorporationId}`);
       showNotification({
         message: "Member corporation changed successfully!",
         ...posiNotifProps
@@ -73,7 +74,7 @@ export default function AddDataOverlay() {
 
   async function handleChangeCorporationAlliance() {
     try {
-      await axios.put(`/corporation/${ccaCorporationId}/change_alliance/${ccaNewAllianceId}`);
+      await axiosInstance.put(`/corporation/${ccaCorporationId}/change_alliance/${ccaNewAllianceId}`);
       showNotification({
         message: "Corporation alliance changed successfully!",
         ...posiNotifProps
@@ -88,7 +89,7 @@ export default function AddDataOverlay() {
 
   async function handleAddMember() {
     try {
-      await axios.post(`/members/add/${amCharacterId}/${amCharacterName}/${amCorporationId}`);
+      await axiosInstance.post(`/members/add/${amCharacterId}/${amCharacterName}/${amCorporationId}`);
       showNotification({
         message: "Member added successfully!",
         ...posiNotifProps
@@ -103,7 +104,7 @@ export default function AddDataOverlay() {
 
   async function handleAddKills() {
     try {
-      const response = await axios.get(`/kills/add`);
+      const response = await axiosInstance.get(`/kills/add`);
       setTaskId(response.data.task_id);
       showNotification({
         message: "Refresh task started!",
@@ -119,7 +120,7 @@ export default function AddDataOverlay() {
 
   async function handleRefreshCorporations() {
     try {
-      const response = await axios.get(`/corporations/refresh`);
+      const response = await axiosInstance.get(`/corporations/refresh`);
       setTaskId(response.data.task_id);
       showNotification({
         message: "Refresh task started!",
@@ -135,7 +136,7 @@ export default function AddDataOverlay() {
 
   async function handleAddMembers() {
     try {
-      const response = await axios.get(`/members/add`);
+      const response = await axiosInstance.get(`/members/add`);
       setTaskId(response.data.task_id);
       showNotification({
         message: "Refresh task started!",
@@ -152,9 +153,9 @@ export default function AddDataOverlay() {
   async function handleAddApprovedChar() {
     try {
       if (addRemApproved) {
-        await axios.post(`/approved/add/${approvedCharToAdd}`);
+        await axiosInstance.post(`/approved/add/${approvedCharToAdd}`);
       } else {
-        await axios.post(`/approved/remove/${approvedCharToAdd}`);
+        await axiosInstance.post(`/approved/remove/${approvedCharToAdd}`);
       }
       showNotification({
         message: `Approved character ${ addRemApproved ? "added" : "removed" } successfully!`,
@@ -171,9 +172,9 @@ export default function AddDataOverlay() {
   async function handleAddAdminChar() {
     try {
       if (addRemAdmin) {
-        await axios.post(`/admin/add/${adminCharToAdd}`);
+        await axiosInstance.post(`/admin/add/${adminCharToAdd}`);
       } else {
-        await axios.post(`/admin/remove/${adminCharToAdd}`);
+        await axiosInstance.post(`/admin/remove/${adminCharToAdd}`);
       }
       showNotification({
         message: `Admin character ${ addRemAdmin ? "added" : "removed" } successfully!`,
@@ -204,7 +205,7 @@ export default function AddDataOverlay() {
     const formData = new FormData();
     formData.append("file", file);
 
-    axios.post('/upload_file', formData, {
+    axiosInstance.post('/upload_file', formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
