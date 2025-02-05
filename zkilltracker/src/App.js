@@ -22,6 +22,7 @@ export const useAuth = () => useContext(AuthContext)
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isMember, setIsMember] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loggedInCharName, setLoggedInCharName] = useState("");
   const navigate = useNavigate();
@@ -38,8 +39,10 @@ export default function App() {
       axiosInstance.get("/login_status")
         .then((response) => {
           const data = response.data;
+          console.log(data)
           setIsLoggedIn(data.isLoggedIn);
           setIsAdmin(data.isAdmin);
+          setIsMember(data.isMember);
           setLoggedInCharName(data.characterName);
     
           if (data.isLoggedIn) {
@@ -73,7 +76,7 @@ export default function App() {
   return (
     <MantineProvider defaultColorScheme="dark">
       <Notifications limit={5} zIndex={1000} />
-      <AuthContext.Provider value={{ isLoggedIn, isAdmin, loggedInCharName, setIsLoggedIn, setIsAdmin, setLoggedInCharName, axiosInstance, pageUrl }}>
+      <AuthContext.Provider value={{ isLoggedIn, isAdmin, isMember, loggedInCharName, setIsLoggedIn, setIsAdmin, setIsMember, setLoggedInCharName, axiosInstance, pageUrl }}>
         {isLoggedIn ? (
           isAdmin ? (
             <Routes>
@@ -83,11 +86,18 @@ export default function App() {
               <Route path="/admin" element={<AdminView />} />
             </Routes>
           ) : (
-            <Routes>
-              <Route path="/corporation" element={<CorporationView />} />
-              <Route path="/alliance" element={<AllianceView />} />
-              <Route path="/members" element={<MemberView />} />
-            </Routes>
+            isMember ? (
+              <Routes>
+                <Route path="/corporation" element={<CorporationView />} />
+                <Route path="/members" element={<MemberView />} />
+              </Routes>
+              ) : (
+              <Routes>
+                <Route path="/corporation" element={<CorporationView />} />
+                <Route path="/alliance" element={<AllianceView />} />
+                <Route path="/members" element={<MemberView />} />
+              </Routes>
+            )
           )
         ) : (
           <Routes>

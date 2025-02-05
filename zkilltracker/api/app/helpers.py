@@ -1,5 +1,5 @@
 from app import EVE_CLIENT_ID, EVE_CLIENT_SECRET, login_manager, db
-from app.models import ApprovedCharacters, AdminCharacters
+from app.models import ApprovedCharacters, AdminCharacters, ApprovedMembers
 from flask import session, jsonify
 from jose import jwt
 import requests
@@ -114,11 +114,19 @@ def serialize_month_progress(item):
 
 @login_manager.user_loader
 def load_user(id):
-    return ApprovedCharacters.query.filter_by(id=id).first()
+    ceo2ic = ApprovedCharacters.query.filter_by(id=id).first()
+    if ceo2ic is not None:
+        return ceo2ic
+    else:
+        return ApprovedMembers.query.filter_by(id=id).first()
 
 
 def is_admin(user):
     return AdminCharacters.query.filter_by(id=user.id).first() is not None
+
+
+def is_member(user):
+    return ApprovedMembers.query.filter_by(id=user.id).first() is not None
 
 
 def _validate_eve_jwt(token: str) -> dict:
@@ -193,18 +201,29 @@ def check_user_status():
         return jsonify({"status": "in_progress"})
 
     approved_character = ApprovedCharacters.query.filter_by(id=character_id).first()
+    approved_member = ApprovedMembers.query.filter_by(id=character_id).first()
 
     if approved_character:
         admin_character = AdminCharacters.query.filter_by(id=character_id).first()
         return {
             "status": "Done",
+            "is_member": False,
             "logged_in": True,
             "is_admin": bool(admin_character),
+            "character_name": character_name,
+        }
+    elif approved_member:
+        return {
+            "status": "Done",
+            "is_member": True,
+            "logged_in": True,
+            "is_admin": False,
             "character_name": character_name,
         }
     else:
         return {
             "status": "False",
+            "is_member": False,
             "logged_in": False,
             "is_admin": False,
             "character_name": None,

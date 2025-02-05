@@ -13,10 +13,12 @@ export default function AddDataOverlay() {
   const [amCharacterName, setAmCharacterName] = useState('');
   const [cmcNewCorporationId, setCmcNewCorporationId] = useState('');
   const [approvedCharToAdd, setApprovedCharToAdd] = useState('');
+  const [approvedMemberToAdd, setApprovedMemberToAdd] = useState('');
   const [adminCharToAdd, setAdminCharToAdd] = useState('');
   const [taskId, setTaskId] = useState(null);
   const [modalOpened, setModalOpened] = useState(false);
   const [addRemApproved, setAddRemApproved] = useState(true);
+  const [addRemApprovedMember, setAddRemApprovedMember] = useState(true);
   const [addRemAdmin, setAddRemAdmin] = useState(true);
   const [buttonsDisabled, setButtonsDisabled] = useState(false);
   const [ccaCorporationId, setCcaCorporationId] = useState('');
@@ -169,6 +171,25 @@ export default function AddDataOverlay() {
     }
   }
 
+  async function handleAddMemberChar() {
+    try {
+      if (addRemApprovedMember) {
+        await axiosInstance.post(`/approved_member/add/${approvedCharToAdd}`);
+      } else {
+        await axiosInstance.post(`/approved_member/remove/${approvedCharToAdd}`);
+      }
+      showNotification({
+        message: `Approved member ${ addRemApprovedMember ? "added" : "removed" } successfully!`,
+        ...posiNotifProps
+      });
+    } catch (error) {
+      showNotification({
+        message: `Failed to ${ addRemApprovedMember ? "add" : "remove" } approved member!`,
+        ...negaNotifProps
+      });
+    }
+  }
+
   async function handleAddAdminChar() {
     try {
       if (addRemAdmin) {
@@ -196,7 +217,7 @@ export default function AddDataOverlay() {
   const handleAddMonthsData = () => {
     if (!file) {
       showNotification({
-        message: "Please select a CSV file before uploading",
+        message: "Please select a .XLSX file before uploading",
         ...negaNotifProps
       });
       return;
@@ -218,7 +239,7 @@ export default function AddDataOverlay() {
     })
     .catch(error => {
       showNotification({
-        message: "Error uploading CSV file",
+        message: "Error uploading XLSX file",
         ...negaNotifProps
       });
       console.error('Upload error:', error);
@@ -382,6 +403,33 @@ export default function AddDataOverlay() {
         </Tabs.Panel>
 
         <Tabs.Panel value="characters" className="panel">
+          <h3 className="adminH3">Add Approved Member</h3>
+          <div className="rowGroup">
+            <div className="rowGroupInputs">
+              <NumberInput
+                label="Character ID"
+                value={approvedMemberToAdd}
+                onChange={(value) => setApprovedMemberToAdd(value)}
+                min={1}
+              />
+              <Switch
+                className="adminSwitch"
+                checked={addRemApprovedMember}
+                onChange={(event) => setAddRemApprovedMember(event.currentTarget.checked)}
+                onLabel="Add"
+                offLabel="Remove"
+                size="xl"
+              />
+            </div>
+            <Button
+              className="postButton"
+              onClick={handleAddMemberChar}
+              disabled={!approvedMemberToAdd}
+            >
+              {addRemApproved ? "Add Approved Member" : "Remove Approved" }
+            </Button>
+          </div>
+
           <h3 className="adminH3">Add Approved Character</h3>
           <div className="rowGroup">
             <div className="rowGroupInputs">

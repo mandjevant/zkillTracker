@@ -17,6 +17,7 @@ from app.models import (
     Items,
     ApprovedCharacters,
     AdminCharacters,
+    ApprovedMembers,
 )
 from app.helpers import (
     serialize_corporation,
@@ -32,6 +33,7 @@ from app.helpers import (
     check_user_status,
     load_user,
     is_admin,
+    is_member,
 )
 from app.taskmanager import KillRefreshTask, MemberRefreshTask
 from app.populators import add_corp, update_corp
@@ -105,15 +107,24 @@ def oauth_callback():
 def login_status():
     if current_user.is_authenticated:
         is_admin_user = is_admin(current_user)
+        is_member_user = is_member(current_user)
         return jsonify(
             {
                 "isLoggedIn": True,
                 "isAdmin": is_admin_user,
+                "isMember": is_member_user,
                 "characterName": session["character_name"],
             }
         )
     else:
-        return jsonify({"isLoggedIn": False, "isAdmin": False, "character_name": ""})
+        return jsonify(
+            {
+                "isLoggedIn": False,
+                "isAdmin": False,
+                "isMember": False,
+                "character_name": "",
+            }
+        )
 
 
 @app.route("/logout")
@@ -124,7 +135,9 @@ def logout():
     logout_user()
 
     logging.debug(f'Logout: character_id={session.get("character_id")}')
-    return jsonify({"isLoggedIn": False, "isAdmin": False, "character_name": ""})
+    return jsonify(
+        {"isLoggedIn": False, "isAdmin": False, "isMember": False, "character_name": ""}
+    )
 
 
 @app.route("/corporation/<int:corporation_id>/months", methods=["GET"])
@@ -664,6 +677,48 @@ def refresh_corporations():
 def get_items():
     all_items = db.session.query(Items).all()
     return jsonify([serialize_items(item) for item in all_items])
+
+
+@app.route(
+    "/approved_member/add/<int:character_id>",
+    methods=["POST"],
+)
+@login_required
+@admin_required
+def add_approved_member(character_id: int):
+    existing_approved_member = (
+        db.session.query(ApprovedMembers).filter_by(id=character_id).first()
+    )
+    if existing_approved_member is not None:
+        return jsonify({"error": "Approved member already exists"}), 400
+
+    new_approved = ApprovedMembers(id=character_id)
+    db.session.add(new_approved)
+    db.session.commit()
+
+    return jsonify({"message": "Approved member added successfully"})
+
+
+@app.route(
+    "/approved_member/remove/<int:character_id>",
+    methods=["POST"],
+)
+@login_required
+@admin_required
+def remove_approved_member(character_id: int):
+    if character_id == int(OWNER_CHAR_ID):
+        return jsonify({"error": "Not allowed to remove owner approved character"}), 400
+
+    existing_approved_member = (
+        db.session.query(ApprovedMembers).filter_by(id=character_id).first()
+    )
+    if existing_approved_member is None:
+        return jsonify({"error": "Approved member does not exists"}), 400
+
+    db.session.delete(existing_approved_member)
+    db.session.commit()
+
+    return jsonify({"message": "Approved member removed successfully"})
 
 
 @app.route(

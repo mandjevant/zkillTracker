@@ -12,6 +12,7 @@ import { LineChart } from '@mantine/charts';
 import { negaNotifProps } from './helpers';
 import { showNotification } from '@mantine/notifications';
 import { useAuth } from '../App';
+import { useNavigate } from "react-router-dom";
 
 
 export default function AllianceView() {
@@ -37,7 +38,12 @@ export default function AllianceView() {
   const [selectedCorporations, setSelectedCorporations] = useState(["MCAP"])
   const [displayOption, setDisplayOption] = useState("killsPerActiveMain")
   const [allianceChartData, setAllianceChartData] = useState([])
-  const { axiosInstance } = useAuth();
+  const { axiosInstance, isMember } = useAuth();
+  const navigate = useNavigate();
+
+  if (!isMember) {
+    navigate("/corporation")
+  }
 
   useEffect(() => {
     if (!monthRange[0] | !monthRange[1]) {
