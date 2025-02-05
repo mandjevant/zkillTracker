@@ -22,6 +22,19 @@ const initMenus = [
   },
 ];
 
+const memberMenus = [
+  {
+    menuId: 1,
+    menuName: "Corporations",
+    menuRef: "/corporation",
+  },
+  {
+    menuId: 2,
+    menuName: "Members",
+    menuRef: "/members",
+  },
+];
+
 const adminMenus = [
   {
     menuId: 4,
@@ -33,15 +46,17 @@ const adminMenus = [
 export default function Menu() {
   const [isActive, setIsActive] = useState(false);
   const [menus, setMenus] = useState([initMenus]);
-  const { isAdmin } = useAuth()
+  const { isAdmin, isMember } = useAuth()
 
   useEffect(() => {
     if (isAdmin) {
       setMenus(initMenus.concat(adminMenus))
+    } else if (isMember) {
+      setMenus(memberMenus)
     } else {
       setMenus(initMenus)
     }
-  }, [isAdmin])
+  }, [isAdmin, isMember])
 
   function switchActive() {
     setIsActive(!isActive);

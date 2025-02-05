@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 
 
 export default function LogOut() {
-  const { loggedInCharName, setIsLoggedIn, setIsAdmin, setLoggedInCharName, axiosInstance } = useAuth();
+  const { loggedInCharName, setIsLoggedIn, setIsAdmin, setIsMember, setLoggedInCharName, axiosInstance } = useAuth();
   const navigate = useNavigate();
 
   function handleLogOut() {
@@ -14,6 +14,7 @@ export default function LogOut() {
       .then(response => {
         setIsLoggedIn(response.data.isLoggedIn);
         setIsAdmin(response.data.isAdmin);
+        setIsMember(response.data.isMember);
         setLoggedInCharName(response.data.character_name);
 
         navigate("/");

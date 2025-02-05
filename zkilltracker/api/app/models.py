@@ -291,6 +291,18 @@ class ApprovedCharacters(db.Model, UserMixin):
         return f"<ApprovedCharacters characterID={self.id}>"
 
 
+class ApprovedMembers(db.Model, UserMixin):
+    __tablename__ = "approvedMembers"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    def __init__(self, id):
+        self.id = id
+
+    def __repr__(self):
+        return f"<ApprovedMembers characterID={self.id}>"
+
+
 class AdminCharacters(db.Model, UserMixin):
     __tablename__ = "adminCharacters"
 
