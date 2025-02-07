@@ -845,7 +845,7 @@ def get_kills_per_month(corporation_id: int):
             months=6
         )
         months_list = [
-            (now - relativedelta(months=i)).strftime("%Y-%m") for i in range(6, 0, -1)
+            (now - relativedelta(months=i)).strftime("%Y-%m") for i in range(5, -1, -1)
         ]
 
         kills_query = (
