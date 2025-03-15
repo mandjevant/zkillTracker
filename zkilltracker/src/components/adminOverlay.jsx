@@ -174,9 +174,9 @@ export default function AddDataOverlay() {
   async function handleAddMemberChar() {
     try {
       if (addRemApprovedMember) {
-        await axiosInstance.post(`/approved_member/add/${approvedCharToAdd}`);
+        await axiosInstance.post(`/approved_member/add/${approvedMemberToAdd}`);
       } else {
-        await axiosInstance.post(`/approved_member/remove/${approvedCharToAdd}`);
+        await axiosInstance.post(`/approved_member/remove/${approvedMemberToAdd}`);
       }
       showNotification({
         message: `Approved member ${ addRemApprovedMember ? "added" : "removed" } successfully!`,

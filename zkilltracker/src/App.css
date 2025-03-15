@@ -355,3 +355,7 @@
 .corpTableSnapshot {
   margin-top: 1vh;
 }
+
+.multiMemberTab {
+  display: flex;
+}
