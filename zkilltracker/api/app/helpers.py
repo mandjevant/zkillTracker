@@ -66,6 +66,13 @@ def serialize_aggregations(aggs):
     }
 
 
+def serialize_aggregations_parmeterized(aggs, display_option):
+    return {
+        "year_month": aggs.year_month,
+        display_option: getattr(aggs, display_option, 0),
+    }
+
+
 def serialize_member(member):
     return {
         "characterID": member.characterID,
