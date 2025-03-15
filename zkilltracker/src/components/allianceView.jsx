@@ -38,10 +38,10 @@ export default function AllianceView() {
   const [selectedCorporations, setSelectedCorporations] = useState(["MCAP"])
   const [displayOption, setDisplayOption] = useState("killsPerActiveMain")
   const [allianceChartData, setAllianceChartData] = useState([])
-  const { axiosInstance, isMember } = useAuth();
+  const { axiosInstance, isMember, isAdmin } = useAuth();
   const navigate = useNavigate();
 
-  if (!isMember) {
+  if (!isMember && !isAdmin) {
     navigate("/corporation")
   }
 

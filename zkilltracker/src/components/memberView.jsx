@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
 import Menu from './menu';
-import { IconCalendarMonth, IconInfinity } from '@tabler/icons-react';
+import { IconCalendarMonth, IconInfinity, IconUsers } from '@tabler/icons-react';
 import { Tabs, Select, Paper, Table, Button, NumberFormatter, Tooltip } from '@mantine/core';
 import { negaNotifProps } from './helpers';
 import { showNotification } from '@mantine/notifications';
 import { LineChart } from '@mantine/charts';
 import { useAuth } from '../App'
+import MultiselectMembers from './multiMember';
 
 
 export default function MemberView() {
@@ -20,6 +21,7 @@ export default function MemberView() {
   const [focusedCurMonthAllKills, setFocusedCurMonthAllKills] = useState(0)
   const [focusedPrevMonthAllKills, setFocusedPrevMonthAllKills] = useState(0)
   const [allItems, setAllItems] = useState([])
+  const [activeTab, setActiveTab] = useState("monthly")
   const [displayOption, setDisplayOption] = useState("killCount")
   const displayOptions = ["killCount", "totalValue", "solo", "awox", "npc", "points"]
   const formatFinancial = (value) => `$${Math.round(value).toLocaleString()}`;
@@ -192,7 +194,7 @@ export default function MemberView() {
       <Menu />
       <div className="memberView">
         <div className="viewWindow">
-          <Tabs variant="pills" defaultValue="monthly">
+          <Tabs variant="pills" defaultValue="monthly" onChange={setActiveTab}>
             <Tabs.List>
               <Tooltip
                 multiline
@@ -206,6 +208,9 @@ export default function MemberView() {
               </Tooltip>
               <Tabs.Tab value="totals" leftSection={<IconInfinity />}>
                 Totals
+              </Tabs.Tab>
+              <Tabs.Tab value="multi" leftSection={<IconUsers />}>
+                Multi
               </Tabs.Tab>
             </Tabs.List>
 
@@ -274,9 +279,18 @@ export default function MemberView() {
                 </Table>
               </div>
             </Tabs.Panel>
+
+            <Tabs.Panel value="multi">
+              <MultiselectMembers 
+                allCorporations={allCorporations}
+                displayOptions={displayOptions}
+                formatFinancial={formatFinancial}
+                formatInteger={formatInteger}
+              />
+            </Tabs.Panel>
           </Tabs>
         </div>
-        <div className="memberSelectors">
+        <div className="memberSelectors" style={{ display: activeTab === "multi" ? "none" : "block" }}>
           <Select
             className="memberSelector"
             checkIconPosition="right"
