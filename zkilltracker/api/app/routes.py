@@ -24,6 +24,7 @@ from app.helpers import (
     serialize_month,
     serialize_alliance,
     serialize_aggregations,
+    serialize_aggregations_parmeterized,
     serialize_member,
     serialize_kills,
     serialize_member_kills,
@@ -897,3 +898,71 @@ def get_kills_per_month(corporation_id: int):
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/members/<string:displayOption>/stats", methods=["GET"])
+@login_required
+def get_members_monthly_aggregations(displayOption: str):
+    match displayOption:
+        case "killCount":
+            select = func.count().label("killCount")
+        case "totalValue":
+            select = func.sum(Kills.totalValue).label("totalValue")
+        case "solo":
+            select = func.sum(Kills.solo).label("solo")
+        case "awox":
+            select = func.sum(Kills.awox).label("awox")
+        case "npc":
+            select = func.sum(Kills.npc).label("npc")
+        case "points":
+            select = func.sum(Kills.points).label("points")
+        case _:
+            select = func.count().label("killCount")
+
+    members = request.args.getlist("members", type=int)
+    if not members:
+        return jsonify([])
+
+    now = datetime.datetime.utcnow()
+    twelve_months_ago = now.replace(day=1, hour=0, minute=0, second=0) - relativedelta(
+        months=12
+    )
+
+    year_months = [
+        (now - relativedelta(months=i)).strftime("%Y-%m") for i in range(11, -1, -1)
+    ]
+
+    results = (
+        db.session.query(
+            MemberKills.characterID,
+            func.strftime("%Y-%m", Kills.datetime).label("year_month"),
+            select
+        )
+        .select_from(MemberKills)
+        .join(Kills, MemberKills.killID == Kills.killID)
+        .filter(MemberKills.characterID.in_(members), Kills.datetime >= twelve_months_ago)
+        .group_by(MemberKills.characterID, func.strftime("%Y-%m", Kills.datetime))
+        .all()
+    )
+
+    results_dict = {}
+    for result in results:
+        if result.characterID not in results_dict:
+            results_dict[result.characterID] = {}
+        results_dict[result.characterID][result.year_month] = serialize_aggregations_parmeterized(result, displayOption)
+
+    aggregated_results = {}
+    for member in members:
+        aggregated_results[member] = []
+        for ym in year_months:
+            if ym in results_dict.get(member, {}):
+                aggregated_results[member].append(results_dict[member][ym])
+            else:
+                aggregated_results[member].append(
+                    {
+                        "year_month": ym,
+                        displayOption: 0,
+                    }
+                )
+
+    return jsonify(aggregated_results)
