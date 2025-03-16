@@ -118,9 +118,9 @@ export default function MultiselectMembers(props) {
           valueFormatter={displayOption === "totalValue" ? formatFinancial : formatInteger}
         />
       </div>
-      <div className="memberSelectors">
+      <div>
         <Select
-          className="memberSelector"
+          className="newMemberSelector"
           checkIconPosition="right"
           label="Choose corporation"
           placeholder=""
@@ -131,7 +131,7 @@ export default function MultiselectMembers(props) {
           allowDeselect={false}
         />
         <MultiSelect
-          className="memberSelector"
+          className="newMemberSelector2"
           checkIconPosition="right"
           label="Choose members"
           data={allMembers}
@@ -140,7 +140,7 @@ export default function MultiselectMembers(props) {
           onChange={setMemberList}
         />
         <Select
-          className="memberSelector"
+          className="newMemberSelector2"
           checkIconPosition="right"
           label="Choose statistic for multiselect chart"
           placeholder="killCount"

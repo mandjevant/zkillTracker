@@ -325,6 +325,7 @@ export default function MemberView() {
             allowDeselect={false}
           />
         </div>
+        <div className="mockMemberSelector" style={{ display: activeTab === "multi" ? "block" : "none" }} />
       </div>
     </div>
   )

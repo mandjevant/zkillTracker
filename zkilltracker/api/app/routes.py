@@ -23,13 +23,15 @@ from app.helpers import (
     serialize_corporation,
     serialize_month,
     serialize_alliance,
+    serialize_alliance_parameterized,
     serialize_aggregations,
-    serialize_aggregations_parmeterized,
+    serialize_aggregations_parameterized,
     serialize_member,
     serialize_kills,
     serialize_member_kills,
     serialize_items,
     serialize_month_progress,
+    serialize_alliance_tab,
     get_payload,
     check_user_status,
     load_user,
@@ -44,7 +46,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from dateutil.relativedelta import relativedelta
 from werkzeug.utils import secure_filename
-from sqlalchemy import func, extract
+from sqlalchemy import func, extract, String, text
 import pandas as pd
 import threading
 import datetime
@@ -949,7 +951,7 @@ def get_members_monthly_aggregations(displayOption: str):
     for result in results:
         if result.characterID not in results_dict:
             results_dict[result.characterID] = {}
-        results_dict[result.characterID][result.year_month] = serialize_aggregations_parmeterized(result, displayOption)
+        results_dict[result.characterID][result.year_month] = serialize_aggregations_parameterized(result, displayOption)
 
     aggregated_results = {}
     for member in members:
@@ -966,3 +968,82 @@ def get_members_monthly_aggregations(displayOption: str):
                 )
 
     return jsonify(aggregated_results)
+
+
+@app.route("/alliance/lastmonth", methods=["GET"])
+@admin_required
+@login_required
+def alliance_export_month():
+    now = datetime.datetime.utcnow()
+    last_month = now - relativedelta(months=1)
+
+    result = db.session.query(
+        Alliance.corporationTicker, 
+        Alliance.kills, 
+        Alliance.mains, 
+        Alliance.activeMains, 
+        Alliance.killsPerActiveMain, 
+        Alliance.percentageOfAllianceKills
+        ).filter(
+        (Alliance.year == last_month.year) & (Alliance.month == last_month.month)
+    ).all()
+
+    serialized_result = [serialize_alliance_tab(entry) for entry in result]
+
+    return jsonify(serialized_result)
+
+
+@app.route("/alliance/<string:displayOption>/sixmonths", methods=["GET"])
+@admin_required
+@login_required
+def alliance_export_sixmonths(displayOption: str):
+    # match case beats eval
+    match displayOption:
+        case "kills":
+            select = Alliance.kills
+        case "mains":
+            select = Alliance.mains
+        case "activeMains":
+            select = Alliance.activeMains
+        case "killsPerActiveMain":
+            select = Alliance.killsPerActiveMain
+        case "percentageOfAllianceKills":
+            select = Alliance.percentageOfAllianceKills
+        case _:
+            select = Alliance.kills
+    
+    now = datetime.datetime.utcnow()
+    year_months = [
+        (now - relativedelta(months=i)).strftime("%Y-%m") for i in range(5, -1, -1)
+    ]
+    
+    expr = None
+    for i in year_months:
+        if expr is None:
+            expr = ((Alliance.year == int(i[:4])) & (Alliance.month == int(i[-2:])))
+        else:
+            expr = expr | ((Alliance.year == int(i[:4])) & (Alliance.month == int(i[-2:])))
+
+    results = (
+        db.session.query(
+            Alliance.corporationTicker,
+            Alliance.year,
+            Alliance.month,
+            select
+        )
+        .filter(expr)
+        .all()
+    )
+
+    serialized_results = [serialize_alliance_parameterized(entry, displayOption) for entry in results]
+    keys = list(set([v for i in serialized_results for k, v in i.items() if k == "corporationTicker"]))
+
+    result = {key: [0] * 6 for key in keys}
+    year_month_index = {ym: i for i, ym in enumerate(year_months)}
+    for entry in serialized_results:
+        ym = f"{entry['year']}-{str(entry['month']).zfill(2)}"
+        if ym in year_month_index:
+            index = year_month_index[ym]
+            result[entry["corporationTicker"]][index] = entry[displayOption]
+
+    return jsonify(result)

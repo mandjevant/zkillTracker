@@ -54,6 +54,26 @@ def serialize_alliance(entry):
     }
 
 
+def serialize_alliance_tab(entry):
+    return {
+        "corporationTicker": entry.corporationTicker,
+        "kills": entry.kills,
+        "mains": entry.mains,
+        "activeMains": entry.activeMains,
+        "killsPerActiveMain": entry.killsPerActiveMain,
+        "percentageOfAllianceKills": entry.percentageOfAllianceKills,
+    }
+
+
+def serialize_alliance_parameterized(aggs, display_option):
+    return {
+        "corporationTicker": aggs.corporationTicker,
+        "year": aggs.year,
+        "month": aggs.month,
+        display_option: getattr(aggs, display_option, 0),
+    }
+
+
 def serialize_aggregations(aggs):
     return {
         "year_month": aggs.year_month,
@@ -66,7 +86,7 @@ def serialize_aggregations(aggs):
     }
 
 
-def serialize_aggregations_parmeterized(aggs, display_option):
+def serialize_aggregations_parameterized(aggs, display_option):
     return {
         "year_month": aggs.year_month,
         display_option: getattr(aggs, display_option, 0),
