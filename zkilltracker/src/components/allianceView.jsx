@@ -6,13 +6,16 @@
 
 import React, { useState, useEffect } from 'react';
 import Menu from './menu';
-import { MultiSelect, Select, Box, Text } from '@mantine/core';
+import { MultiSelect, Select, Box, Text, Tabs } from '@mantine/core';
+import { IconCalendarStats, IconContract, IconAdjustmentsAlt } from '@tabler/icons-react';
 import { MonthPickerInput } from '@mantine/dates';
 import { LineChart } from '@mantine/charts';
 import { negaNotifProps } from './helpers';
 import { showNotification } from '@mantine/notifications';
 import { useAuth } from '../App';
 import { useNavigate } from "react-router-dom";
+import AllianceSixMonths from './allianceSixMonths';
+import AllianceLastMonth from './allianceLastMonth';
 
 
 export default function AllianceView() {
@@ -165,47 +168,75 @@ export default function AllianceView() {
   return (
     <div className="App">
       <Menu />
-      <div className="viewGraph" id="allianceGraph">
-        <LineChart
-          id="allianceLineChart"
-          data={allianceChartData}
-          dataKey={"monthYearConcat"}
-          series={selectedCorporations.map((corp, index) => (
-            { name: corp, color: colors[index], alwaysShowInLegend: true }
-          ))}
-          curveType="bump"
-          withLegend
-          legendProps={{ content: <ChartLegend />, }}
-          tooltipAnimationDuration={100}
-          xAxisLabel={"Month-Year"}
-          yAxisLabel={displayOption}
-        />
-        <div className="allianceGraphSelectors">
-          <MonthPickerInput
-            type="range"
-            label="Pick date range"
-            placeholder="Pick date range"
-            value={monthRange}
-            onChange={setMonthRange}
-          />
-          <MultiSelect
-            checkIconPosition="right"
-            label="Corporations to show"
-            data={allTickers}
-            searchable
-            defaultValue={["MCAP"]}
-            onChange={setSelectedCorporations}
-          />
-          <Select
-            checkIconPosition="right"
-            label="Choose statistic"
-            placeholder="killsPerActiveMain"
-            data={displayOptions}
-            searchable
-            defaultValue={["killsPerActiveMain"]}
-            onChange={setDisplayOption}
-            allowDeselect={false}
-          />
+      <div className="memberView">
+        <div className="viewWindow">
+          <Tabs variant="pills" defaultValue="graph">
+            <Tabs.List>
+              <Tabs.Tab value="graph" icon={<IconAdjustmentsAlt />}>
+                Visualize
+              </Tabs.Tab>
+              <Tabs.Tab value="table" icon={<IconCalendarStats />}>
+                Last month
+              </Tabs.Tab>
+              <Tabs.Tab value="tableSixMonths" icon={<IconContract />}>
+                Past six months
+              </Tabs.Tab>
+            </Tabs.List>
+
+            <Tabs.Panel value="graph">
+              <div className="viewGraph" id="allianceGraph">
+                <LineChart
+                  id="allianceLineChart"
+                  data={allianceChartData}
+                  dataKey={"monthYearConcat"}
+                  series={selectedCorporations.map((corp, index) => (
+                    { name: corp, color: colors[index], alwaysShowInLegend: true }
+                  ))}
+                  curveType="bump"
+                  withLegend
+                  legendProps={{ content: <ChartLegend />, }}
+                  tooltipAnimationDuration={100}
+                  xAxisLabel={"Month-Year"}
+                  yAxisLabel={displayOption}
+                />
+                <div className="allianceGraphSelectors">
+                  <MonthPickerInput
+                    type="range"
+                    label="Pick date range"
+                    placeholder="Pick date range"
+                    value={monthRange}
+                    onChange={setMonthRange}
+                  />
+                  <MultiSelect
+                    checkIconPosition="right"
+                    label="Corporations to show"
+                    data={allTickers}
+                    searchable
+                    defaultValue={["MCAP"]}
+                    onChange={setSelectedCorporations}
+                  />
+                  <Select
+                    checkIconPosition="right"
+                    label="Choose statistic"
+                    placeholder="killsPerActiveMain"
+                    data={displayOptions}
+                    searchable
+                    defaultValue={["killsPerActiveMain"]}
+                    onChange={setDisplayOption}
+                    allowDeselect={false}
+                  />
+                </div>
+              </div>
+            </Tabs.Panel>
+
+            <Tabs.Panel value="table">
+              <AllianceLastMonth displayOptions={displayOptions.filter((option) => option !== "growthRate")} />
+            </Tabs.Panel>
+
+            <Tabs.Panel value="tableSixMonths">
+              <AllianceSixMonths displayOptions={displayOptions.filter((option) => option !== "growthRate")} />
+            </Tabs.Panel>
+          </Tabs>
         </div>
       </div>
     </div>

@@ -122,10 +122,6 @@
   font-weight: bold;
 }
 
-#allianceGraph {
-  margin-top: 15vh;
-}
-
 #allianceLineChart {
   width: 65vw;
   height: 70vh;
@@ -294,6 +290,11 @@
   margin-top: 1vh;
 }
 
+.allianceTable {
+  margin-top: 1vh;
+  margin-left: 12vw;
+}
+
 .AppLogin {
   display: flex;
   align-items: center;
@@ -358,4 +359,16 @@
 
 .multiMemberTab {
   display: flex;
+}
+
+.newMemberSelector {
+  margin-top: -1vh;
+}
+
+.mockMemberSelector {
+  min-width: 12vw;
+}
+
+.newMemberSelector2 {
+  margin-top: 1vh;
 }
