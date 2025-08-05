@@ -14,6 +14,7 @@ export default function AddDataOverlay() {
   const [cmcNewCorporationId, setCmcNewCorporationId] = useState('');
   const [approvedCharToAdd, setApprovedCharToAdd] = useState('');
   const [approvedMemberToAdd, setApprovedMemberToAdd] = useState('');
+  const [approvedCorpToRem, setApprovedCorpToRem] = useState('');
   const [adminCharToAdd, setAdminCharToAdd] = useState('');
   const [taskId, setTaskId] = useState(null);
   const [modalOpened, setModalOpened] = useState(false);
@@ -166,6 +167,21 @@ export default function AddDataOverlay() {
     } catch (error) {
       showNotification({
         message: `Failed to ${ addRemApproved ? "add" : "remove" } approved character!`,
+        ...negaNotifProps
+      });
+    }
+  }
+
+  async function handleRemoveApprovedCorp() {
+    try {
+      await axiosInstance.post(`/approved/remove/corp/${approvedCorpToRem}`)
+      showNotification({
+        message: `Approved corporation removed successfully!`,
+        ...posiNotifProps
+      });
+    } catch (error) {
+      showNotification({
+        message: `Failed to remove approved corporation!`,
         ...negaNotifProps
       });
     }
@@ -403,7 +419,26 @@ export default function AddDataOverlay() {
         </Tabs.Panel>
 
         <Tabs.Panel value="characters" className="panel">
-          <h3 className="adminH3">Add Approved Member</h3>
+          <h3 className="adminH3">Remove approved characters by corp</h3>
+          <div className="rowGroup">
+            <div className="rowGroupInputs">
+              <NumberInput
+                label="Corporation ID"
+                value={approvedCorpToRem}
+                onChange={(value) => setApprovedCorpToRem(value)}
+                min={1}
+              />
+            </div>
+            <Button
+              className="postButton"
+              onClick={handleRemoveApprovedCorp}
+              disabled={!approvedCorpToRem}
+            >
+              Remove Approved Corporation
+            </Button>
+          </div>
+
+          <h3 className="adminH3">Add Approved Member (no leadership)</h3>
           <div className="rowGroup">
             <div className="rowGroupInputs">
               <NumberInput

@@ -313,3 +313,21 @@ class AdminCharacters(db.Model, UserMixin):
 
     def __repr__(self):
         return f"<AdminCharacters characterID={self.id}>"
+
+
+class TempUser(db.Model, UserMixin):
+    __tablename__ = "temp_users"
+
+    id = db.Column(db.String, primary_key=True)
+    character_name = db.Column(db.String, nullable=False)
+    alliance_id = db.Column(db.String, nullable=False)
+    last_verified = db.Column(db.DateTime, nullable=False)
+
+    def __init__(self, id, character_name, alliance_id):
+        self.id = id
+        self.character_name = character_name
+        self.alliance_id = alliance_id
+        self.last_verified = db.func.now()
+
+    def __repr__(self):
+        return f"<TempUser id={self.id}, character_name={self.character_name}, alliance_id={self.alliance_id}, last_verified={self.last_verified}>"
