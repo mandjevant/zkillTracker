@@ -58,42 +58,51 @@ class KillRefreshTask:
                 kill_data = []
                 attacker_data = []
 
+                time.sleep(5)
+
                 for kill in data:
                     kill_id = kill.get("killmail_id", 0)
                     if kill_id not in existing_kill_ids:
-                        kill_hash = kill.get("zkb").get("hash")
+                        try:
+                            kill_hash = kill.get("zkb").get("hash")
 
-                        esi_url = f"https://esi.evetech.net/latest/killmails/{kill_id}/{kill_hash}/"
-                        esi_response = requests.get(esi_url)
-                        esi_data = esi_response.json()
+                            esi_url = f"https://esi.evetech.net/latest/killmails/{kill_id}/{kill_hash}/"
+                            esi_response = requests.get(esi_url)
+                            esi_data = esi_response.json()
 
-                        kill_data.append(
-                            Kills(
-                                killID=kill_id,
-                                killHash=kill_hash,
-                                locationID=kill.get("zkb").get("locationID"),
-                                totalValue=kill.get("zkb").get("totalValue"),
-                                points=kill.get("zkb").get("points"),
-                                npc=kill.get("zkb").get("npc"),
-                                solo=kill.get("zkb").get("solo"),
-                                awox=kill.get("zkb").get("awox"),
-                                datetime=esi_data.get("killmail_time"),
-                                shipTypeID=esi_data.get("victim").get("ship_type_id"),
-                            )
-                        )
-
-                        attackers = esi_data.get("attackers")
-                        for attacker in attackers:
-                            if attacker.get("alliance_id") == 99011223:
-                                attacker_data.append(
-                                    MemberKills(
-                                        killID=kill_id,
-                                        characterID=attacker.get("character_id"),
-                                        damageDone=attacker.get("damage_done"),
-                                        finalBlow=attacker.get("final_blow"),
-                                        shipTypeID=attacker.get("ship_type_id"),
-                                    )
+                            kill_data.append(
+                                Kills(
+                                    killID=kill_id,
+                                    killHash=kill_hash,
+                                    locationID=kill.get("zkb", {}).get("locationID", 0),
+                                    totalValue=kill.get("zkb", {}).get(
+                                        "totalValue", 0.0
+                                    ),
+                                    points=kill.get("zkb", {}).get("points", 0),
+                                    npc=kill.get("zkb", {}).get("npc", False),
+                                    solo=kill.get("zkb", {}).get("solo", False),
+                                    awox=kill.get("zkb", {}).get("awox", False),
+                                    datetime=esi_data.get("killmail_time", ""),
+                                    shipTypeID=esi_data.get("victim", {}).get(
+                                        "ship_type_id", 0
+                                    ),
                                 )
+                            )
+
+                            for attacker in esi_data.get("attackers", []):
+                                if attacker.get("alliance_id") == 99011223:
+                                    attacker_data.append(
+                                        MemberKills(
+                                            killID=kill_id,
+                                            characterID=attacker.get("character_id", 0),
+                                            damageDone=attacker.get("damage_done", 0),
+                                            finalBlow=attacker.get("final_blow", False),
+                                            shipTypeID=attacker.get("ship_type_id", 0),
+                                        )
+                                    )
+                        except Exception as e:
+                            continue
+                        time.sleep(0.5)
 
                 if len(data) < 200:
                     completed = True

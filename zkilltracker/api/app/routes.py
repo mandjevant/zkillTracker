@@ -18,6 +18,7 @@ from app.models import (
     ApprovedCharacters,
     AdminCharacters,
     ApprovedMembers,
+    TempUser,
 )
 from app.helpers import (
     serialize_corporation,
@@ -77,6 +78,10 @@ corp_trigger_two = CronTrigger(
     year="*", month="*", day="*", hour="21", minute="30", second="0"
 )
 scheduler.add_job(update_corp, corp_trigger_two)
+member_trigger = CronTrigger(
+    year="*", month="*", day="2", hour="0", minute="0", second="0"
+)
+scheduler.add_job(MemberRefreshTask(uuid.uuid4).fill_members, member_trigger)
 scheduler.start()
 
 
@@ -93,9 +98,37 @@ def login():
 def oauth_callback():
     auth_code = request.args.get("code")
     if auth_code:
-        character_id = get_payload(auth_code)
-        user = load_user(id=character_id)
+        character_id, character_name, alliance_id = get_payload(auth_code)
+        logging.info("alliance_id in oauth_callback: %s", alliance_id)
 
+        # ✅ Only allow temporary login if alliance is valid
+        if str(alliance_id) in ["99011239", "99011223"]:
+            try:
+                # Upsert logic
+                existing = TempUser.query.filter_by(id=character_id).first()
+                if existing:
+                    existing.character_name = character_name
+                    existing.alliance_id = alliance_id
+                    existing.last_verified = datetime.datetime.now(
+                        datetime.timezone.utc
+                    )
+                else:
+                    db.session.add(
+                        TempUser(
+                            id=character_id,
+                            character_name=character_name,
+                            alliance_id=alliance_id,
+                        )
+                    )
+                db.session.commit()
+                logging.debug(
+                    f"Temporary login for character_id={character_id}, alliance_id={alliance_id}"
+                )
+            except Exception as e:
+                logging.error(f"Error during temporary login: {e}")
+                logging.debug(f"char name: {character_name}, char id: {character_id}")
+
+        user = load_user(id=character_id)
         user_status = check_user_status()
         logging.debug(f"Login: user_status={user_status}")
 
@@ -767,6 +800,47 @@ def remove_approved(character_id: int):
 
 
 @app.route(
+    "/approved/remove/corp/<int:corporation_id>",
+    methods=["POST"],
+)
+@login_required
+@admin_required
+def remove_approved_corp(corporation_id: int):
+    if str(corporation_id) == "98753041":
+        return (
+            jsonify(
+                {"error": "Not allowed to remove corp of owner approved character"}
+            ),
+            400,
+        )
+
+    corp_characters = (
+        db.session.query(Members).filter_by(corporationID=corporation_id).all()
+    )
+    all_corp_character_ids = [char.characterID for char in corp_characters]
+
+    if all_corp_character_ids:
+        existing_approved = (
+            db.session.query(ApprovedCharacters)
+            .filter(ApprovedCharacters.id.in_(all_corp_character_ids))
+            .all()
+        )
+    else:
+        existing_approved = []
+
+    if not existing_approved:
+        return jsonify({"error": "Approved character corporation does not exist"}), 400
+
+    for approved in existing_approved:
+        db.session.delete(approved)
+        db.session.commit()
+
+    return jsonify(
+        {"message": "Approved characters of corporation removed successfully"}
+    )
+
+
+@app.route(
     "/admin/add/<int:character_id>",
     methods=["POST"],
 )
@@ -938,11 +1012,13 @@ def get_members_monthly_aggregations(displayOption: str):
         db.session.query(
             MemberKills.characterID,
             func.strftime("%Y-%m", Kills.datetime).label("year_month"),
-            select
+            select,
         )
         .select_from(MemberKills)
         .join(Kills, MemberKills.killID == Kills.killID)
-        .filter(MemberKills.characterID.in_(members), Kills.datetime >= twelve_months_ago)
+        .filter(
+            MemberKills.characterID.in_(members), Kills.datetime >= twelve_months_ago
+        )
         .group_by(MemberKills.characterID, func.strftime("%Y-%m", Kills.datetime))
         .all()
     )
@@ -951,7 +1027,9 @@ def get_members_monthly_aggregations(displayOption: str):
     for result in results:
         if result.characterID not in results_dict:
             results_dict[result.characterID] = {}
-        results_dict[result.characterID][result.year_month] = serialize_aggregations_parameterized(result, displayOption)
+        results_dict[result.characterID][result.year_month] = (
+            serialize_aggregations_parameterized(result, displayOption)
+        )
 
     aggregated_results = {}
     for member in members:
@@ -977,16 +1055,20 @@ def alliance_export_month():
     now = datetime.datetime.utcnow()
     last_month = now - relativedelta(months=1)
 
-    result = db.session.query(
-        Alliance.corporationTicker, 
-        Alliance.kills, 
-        Alliance.mains, 
-        Alliance.activeMains, 
-        Alliance.killsPerActiveMain, 
-        Alliance.percentageOfAllianceKills
-        ).filter(
-        (Alliance.year == last_month.year) & (Alliance.month == last_month.month)
-    ).all()
+    result = (
+        db.session.query(
+            Alliance.corporationTicker,
+            Alliance.kills,
+            Alliance.mains,
+            Alliance.activeMains,
+            Alliance.killsPerActiveMain,
+            Alliance.percentageOfAllianceKills,
+        )
+        .filter(
+            (Alliance.year == last_month.year) & (Alliance.month == last_month.month)
+        )
+        .all()
+    )
 
     serialized_result = [serialize_alliance_tab(entry) for entry in result]
 
@@ -1011,32 +1093,42 @@ def alliance_export_sixmonths(displayOption: str):
             select = Alliance.percentageOfAllianceKills
         case _:
             select = Alliance.kills
-    
+
     now = datetime.datetime.utcnow()
     year_months = [
         (now - relativedelta(months=i)).strftime("%Y-%m") for i in range(5, -1, -1)
     ]
-    
+
     expr = None
     for i in year_months:
         if expr is None:
-            expr = ((Alliance.year == int(i[:4])) & (Alliance.month == int(i[-2:])))
+            expr = (Alliance.year == int(i[:4])) & (Alliance.month == int(i[-2:]))
         else:
-            expr = expr | ((Alliance.year == int(i[:4])) & (Alliance.month == int(i[-2:])))
+            expr = expr | (
+                (Alliance.year == int(i[:4])) & (Alliance.month == int(i[-2:]))
+            )
 
     results = (
         db.session.query(
-            Alliance.corporationTicker,
-            Alliance.year,
-            Alliance.month,
-            select
+            Alliance.corporationTicker, Alliance.year, Alliance.month, select
         )
         .filter(expr)
         .all()
     )
 
-    serialized_results = [serialize_alliance_parameterized(entry, displayOption) for entry in results]
-    keys = list(set([v for i in serialized_results for k, v in i.items() if k == "corporationTicker"]))
+    serialized_results = [
+        serialize_alliance_parameterized(entry, displayOption) for entry in results
+    ]
+    keys = list(
+        set(
+            [
+                v
+                for i in serialized_results
+                for k, v in i.items()
+                if k == "corporationTicker"
+            ]
+        )
+    )
 
     result = {key: [0] * 6 for key in keys}
     year_month_index = {ym: i for i, ym in enumerate(year_months)}

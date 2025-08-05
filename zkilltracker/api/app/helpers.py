@@ -1,5 +1,5 @@
 from app import EVE_CLIENT_ID, EVE_CLIENT_SECRET, login_manager, db
-from app.models import ApprovedCharacters, AdminCharacters, ApprovedMembers
+from app.models import ApprovedCharacters, AdminCharacters, ApprovedMembers, TempUser
 from flask import session, jsonify
 from jose import jwt
 import requests
@@ -142,10 +142,14 @@ def serialize_month_progress(item):
 @login_manager.user_loader
 def load_user(id):
     ceo2ic = ApprovedCharacters.query.filter_by(id=id).first()
-    if ceo2ic is not None:
+    if ceo2ic:
         return ceo2ic
-    else:
-        return ApprovedMembers.query.filter_by(id=id).first()
+
+    temp_user = TempUser.query.filter_by(id=id).first()
+    if temp_user and str(temp_user.alliance_id) in ["99011239", "99011223"]:
+        return temp_user
+
+    return ApprovedMembers.query.filter_by(id=id).first()
 
 
 def is_admin(user):
@@ -153,6 +157,8 @@ def is_admin(user):
 
 
 def is_member(user):
+    if hasattr(user, "alliance_id"):
+        return str(user.alliance_id) in ["99011239", "99011223"]
     return ApprovedMembers.query.filter_by(id=user.id).first() is not None
 
 
@@ -215,20 +221,38 @@ def get_payload(authorization_code: str):
     character_id = content["sub"][14:]
     character_name = content["name"]
 
+    def get_alliance_id(character_id):
+        try:
+            response = requests.get(
+                f"https://esi.evetech.net/latest/characters/{character_id}/",
+            )
+            response.raise_for_status()
+            return response.json().get("alliance_id")
+        except requests.RequestException as e:
+            print(f"Error fetching alliance ID: {e}")
+            return None
+
     session["character_id"] = character_id
     session["character_name"] = character_name
+    alliance_id = get_alliance_id(character_id)
+    session["alliance_id"] = alliance_id
 
-    return character_id
+    return character_id, character_name, alliance_id
 
 
 def check_user_status():
     character_id = session.get("character_id")
     character_name = session.get("character_name")
+    alliance_id = session.get("alliance_id")
     if not character_id:
         return jsonify({"status": "in_progress"})
 
     approved_character = ApprovedCharacters.query.filter_by(id=character_id).first()
-    approved_member = ApprovedMembers.query.filter_by(id=character_id).first()
+
+    if str(alliance_id) in ["99011239", "99011223"]:
+        approved_member = True
+    else:
+        approved_member = ApprovedMembers.query.filter_by(id=character_id).first()
 
     if approved_character:
         admin_character = AdminCharacters.query.filter_by(id=character_id).first()
