@@ -26,3 +26,17 @@ yarn-error.log*
 /api/__pycache__
 /api/venv
 /api/.flaskenv
+nginx.conf
+ngingxconfig.txt
+alliancedatadump.xlsx
+testing.py
+populateFunctions.py
+qs1603/
+api/instance
+api/docker-compose.yml
+api/docker-composenginx.yml
+api/docker-composetraefik.yml
+docker-compose-server.yml
+docker-compose.traefik.yml
+docker-compose-old.yml
+zkilltracker
