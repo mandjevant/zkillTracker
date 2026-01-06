@@ -47,7 +47,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from dateutil.relativedelta import relativedelta
 from werkzeug.utils import secure_filename
-from sqlalchemy import func, extract, String, text
+from sqlalchemy import func, extract
 import pandas as pd
 import threading
 import datetime
@@ -214,10 +214,10 @@ def get_all_corporations():
 @app.route("/get_alliance_data", methods=["GET"])
 @login_required
 def get_alliance_data():
-    start_year = int(request.args.get("start_year"))
-    start_month = int(request.args.get("start_month"))
-    end_year = int(request.args.get("end_year"))
-    end_month = int(request.args.get("end_month"))
+    start_year = int(request.args.get("start_year", 0))
+    start_month = int(request.args.get("start_month", 1))
+    end_year = int(request.args.get("end_year", 9999))
+    end_month = int(request.args.get("end_month", 12))
     corporations = request.args.getlist("corporations")
 
     query = db.session.query(Alliance).filter(
@@ -242,7 +242,10 @@ def get_alliance_data():
             entry["growthRate"] = 1  # No previous month data
         else:
             prev_mains = previous_mains[corporation_ticker]
-            entry["growthRate"] = current_mains / prev_mains if prev_mains > 0 else 1
+            if prev_mains is not None:
+                entry["growthRate"] = (
+                    current_mains / prev_mains if prev_mains > 0 else 1
+                )
 
         previous_mains[corporation_ticker] = current_mains
 
@@ -252,10 +255,10 @@ def get_alliance_data():
 @app.route("/get_alliance_tickers", methods=["GET"])
 @login_required
 def get_alliance_tickers():
-    start_year = int(request.args.get("start_year"))
-    start_month = int(request.args.get("start_month"))
-    end_year = int(request.args.get("end_year"))
-    end_month = int(request.args.get("end_month"))
+    start_year = int(request.args.get("start_year", 0))
+    start_month = int(request.args.get("start_month", 1))
+    end_year = int(request.args.get("end_year", 9999))
+    end_month = int(request.args.get("end_month", 12))
 
     results = (
         db.session.query(Alliance)
@@ -357,6 +360,9 @@ def get_member_monthly_aggregations(character_id: int):
         .first()
     )
 
+    if date_range is None:
+        return jsonify([])
+
     if not date_range.min_date or not date_range.max_date:
         return jsonify([])
 
@@ -422,6 +428,9 @@ def get_member_aggregations(character_id: int):
         .filter(MemberKills.characterID == character_id)
         .first()
     )
+
+    if date_range is None:
+        return jsonify([])
 
     if not date_range.min_date or not date_range.max_date:
         return jsonify([])
@@ -890,7 +899,7 @@ def upload_file():
         return jsonify({"error": "No file part"}), 400
 
     file = request.files["file"]
-    if file.filename == "":
+    if file.filename == "" or file.filename is None:
         return jsonify({"error": "No selected file"}), 400
 
     if not file.filename.endswith(".xlsx"):
